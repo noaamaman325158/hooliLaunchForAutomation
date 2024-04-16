@@ -1,0 +1,1 @@
+/home/noaa/Documents/NinjaTrader 8/outgoing/Globex_Source1_position.txt
