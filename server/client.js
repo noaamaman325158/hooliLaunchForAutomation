@@ -17,8 +17,8 @@ socket.on('initialFileChanges', (fileChanges) => {
 
 socket.on('fileChange', (path) => {
     console.log('File change detected:', path);
-
-    fs.appendFile('local_file.txt', `${path}\n`, (err) => {
+    console.log(`THe path that we write to ${path}`)
+    fs.appendFile('Globex_Source1_position.txt', `${path}\n`, (err) => {
         if (err) {
             console.error('Error appending to local file:', err);
             return;

@@ -14,7 +14,7 @@ app.use(cors());
 
 
 const pathToWatch = "/home/noaa/Documents/NinjaTrader 8/outgoing/Globex_Source1_position.txt";
-const remotePathToWrite = "/home/noaa/Documents/NinjaTrader 8/outgoing/Globex_Source1_position.txt";
+const remotePathToWrite = "C:\Users\OneDrive\Documents\NinjaTrader 8\outgoing\Globex_Source1_position.txt";
 let fileChangesTracking = [];
 let remoteComputerIp = "";
 let remotePort = ""
