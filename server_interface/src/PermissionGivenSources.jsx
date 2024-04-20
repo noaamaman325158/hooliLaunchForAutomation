@@ -6,9 +6,13 @@ const DataTable = () => {
   const [tracking, setTracking] = useState({});
   const [tableData, setTableData] = useState([]);
 <<<<<<< HEAD
+<<<<<<< HEAD
   const [clientCount, setClientCount] = useState(0);  // State to hold the count of connected clients
 =======
 >>>>>>> 139791a (Integration between the server interface to the client interface)
+=======
+  const [clientCount, setClientCount] = useState(0);  // State to hold the count of connected clients
+>>>>>>> ba951c1 (Add some counter part for the server UI)
 
   useEffect(() => {
     const storedTrackingData = localStorage.getItem('trackingData');
@@ -61,9 +65,13 @@ const DataTable = () => {
       console.log('Permissions updated:', response.data);
       alert('Permissions successfully updated.');
 <<<<<<< HEAD
+<<<<<<< HEAD
       fetchClientCount();  // Refresh the client count after permissions are updated
 =======
 >>>>>>> 139791a (Integration between the server interface to the client interface)
+=======
+      fetchClientCount();  // Refresh the client count after permissions are updated
+>>>>>>> ba951c1 (Add some counter part for the server UI)
     } catch (error) {
       console.error('Failed to update permissions:', error.response ? error.response.data : error.message);
       alert('Failed to update permissions.');
