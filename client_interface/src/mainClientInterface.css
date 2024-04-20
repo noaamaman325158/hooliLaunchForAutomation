@@ -48,6 +48,7 @@
 .button:hover {
   background-color: #45a049;
 }
+<<<<<<< HEAD
 
 .client-count {
   margin-top: 20px;
@@ -74,3 +75,5 @@
   font-weight: bold; 
 }
 
+=======
+>>>>>>> 3da80c1 (Add some static basic UI for the client)
