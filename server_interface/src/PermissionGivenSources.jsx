@@ -5,7 +5,10 @@ import './permissionGivenSources.css';
 const DataTable = () => {
   const [tracking, setTracking] = useState({});
   const [tableData, setTableData] = useState([]);
+<<<<<<< HEAD
   const [clientCount, setClientCount] = useState(0);  // State to hold the count of connected clients
+=======
+>>>>>>> 139791a (Integration between the server interface to the client interface)
 
   useEffect(() => {
     const storedTrackingData = localStorage.getItem('trackingData');
@@ -57,7 +60,10 @@ const DataTable = () => {
       const response = await axios.post('http://localhost:3001/updatePermissions', tracking);
       console.log('Permissions updated:', response.data);
       alert('Permissions successfully updated.');
+<<<<<<< HEAD
       fetchClientCount();  // Refresh the client count after permissions are updated
+=======
+>>>>>>> 139791a (Integration between the server interface to the client interface)
     } catch (error) {
       console.error('Failed to update permissions:', error.response ? error.response.data : error.message);
       alert('Failed to update permissions.');

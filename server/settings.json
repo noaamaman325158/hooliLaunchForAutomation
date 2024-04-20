@@ -8,6 +8,7 @@
   "allowed_destinations": [
     "Sim101"
   ],
+<<<<<<< HEAD
   "clients_connected": [
     {
       "id": "IPLjXzTVeLSeyUAiAAAB",
@@ -15,4 +16,7 @@
       "connectTime": "2024-04-20T21:41:35.398Z"
     }
   ]
+=======
+  "clients_connected": []
+>>>>>>> 139791a (Integration between the server interface to the client interface)
 }
