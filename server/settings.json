@@ -9,6 +9,9 @@
     "Sim101"
   ],
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 2b4d497 (Inetgration of the clients counter with the backend)
   "clients_connected": [
     {
       "id": "IPLjXzTVeLSeyUAiAAAB",
@@ -16,7 +19,10 @@
       "connectTime": "2024-04-20T21:41:35.398Z"
     }
   ]
+<<<<<<< HEAD
 =======
   "clients_connected": []
 >>>>>>> 139791a (Integration between the server interface to the client interface)
+=======
+>>>>>>> 2b4d497 (Inetgration of the clients counter with the backend)
 }
