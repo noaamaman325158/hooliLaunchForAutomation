@@ -49,6 +49,9 @@
   background-color: #45a049;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 8457a3e (Add some segment to the UI that actually show the number of the connected clients in live.)
 
 .client-count {
   margin-top: 20px;
@@ -75,5 +78,8 @@
   font-weight: bold; 
 }
 
+<<<<<<< HEAD
 =======
 >>>>>>> 3da80c1 (Add some static basic UI for the client)
+=======
+>>>>>>> 8457a3e (Add some segment to the UI that actually show the number of the connected clients in live.)

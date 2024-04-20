@@ -53,11 +53,13 @@ const accountsData = [
 function ClientInterface() {
   const [connected, setConnected] = useState(false);
   const [selectedAccounts, setSelectedAccounts] = useState([]);
+  const [clientCount, setClientCount] = useState(0); // State to track the number of connected clients
 
   const handleConnect = () => {
     setConnected(true);
 >>>>>>> 3da80c1 (Add some static basic UI for the client)
     console.log('Connected to server!');
+    setClientCount(prevCount => prevCount + 1); // Increment client count upon connection
   };
 
   const handleCheckboxChange = (accountId) => {
@@ -74,12 +76,16 @@ function ClientInterface() {
     <div className="table-container">
       <h1>Client Trade Copier Interface</h1>
 <<<<<<< HEAD
+<<<<<<< HEAD
       <div className="client-count">Current Connections: {clientCount}</div>
       <table className="table">
         <thead>
           <tr>
             <th>Bag TO Track</th>
 =======
+=======
+      <div className="client-count">Current Connections: {clientCount}</div> {/* Display the number of connected clients */}
+>>>>>>> 8457a3e (Add some segment to the UI that actually show the number of the connected clients in live.)
       <table className="table">
         <thead>
           <tr>
