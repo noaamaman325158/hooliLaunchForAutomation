@@ -10,6 +10,7 @@
   ],
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 2b4d497 (Inetgration of the clients counter with the backend)
   "clients_connected": [
@@ -25,4 +26,7 @@
 >>>>>>> 139791a (Integration between the server interface to the client interface)
 =======
 >>>>>>> 2b4d497 (Inetgration of the clients counter with the backend)
+=======
+  "clients_connected": []
+>>>>>>> 79ef9c6 (INtegrate the valisation mac with the mongoDB server)
 }
