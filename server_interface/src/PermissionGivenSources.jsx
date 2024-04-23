@@ -7,12 +7,17 @@ const DataTable = () => {
   const [tableData, setTableData] = useState([]);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   const [clientCount, setClientCount] = useState(0);  // State to hold the count of connected clients
 =======
 >>>>>>> 139791a (Integration between the server interface to the client interface)
 =======
   const [clientCount, setClientCount] = useState(0);  // State to hold the count of connected clients
 >>>>>>> ba951c1 (Add some counter part for the server UI)
+=======
+  const [clientCount, setClientCount] = useState(0);
+  const [newSourceName, setNewSourceName] = useState(''); // New state for the name of the new source
+>>>>>>> ca5a8da (Add some static change in the server UI of add some records for the table.)
 
   useEffect(() => {
     const storedTrackingData = localStorage.getItem('trackingData');
@@ -20,7 +25,7 @@ const DataTable = () => {
       setTracking(JSON.parse(storedTrackingData));
     }
     fetchDestinationsToTracking();
-    fetchClientCount(); // Fetch initial client count on mount
+    fetchClientCount();
   }, []);
 
   useEffect(() => {
@@ -31,7 +36,6 @@ const DataTable = () => {
     try {
       const response = await axios.get('http://localhost:3003/getDestinationsTracking');
       const destinations = response.data;
-      console.log(`${destinations}`)
       console.log('In the frontend part:', destinations);
       setTableData(destinations.map((destination, index) => ({
         id: index,
@@ -49,7 +53,7 @@ const DataTable = () => {
   const fetchClientCount = async () => {
     try {
       const response = await axios.get('http://localhost:3003/countConnectedClients');
-      setClientCount(response.data.count); // Assuming the endpoint returns an object with a count property
+      setClientCount(response.data.count);
     } catch (error) {
       console.error('Failed to fetch client count:', error);
     }
@@ -57,6 +61,13 @@ const DataTable = () => {
 
   const handleCheckboxChange = (id) => {
     setTracking(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleAddSource = () => {
+    const newId = tableData.length;
+    setTableData([...tableData, { id: newId, name: newSourceName }]);
+    setTracking(prev => ({ ...prev, [newId]: false }));
+    setNewSourceName(''); // Reset input field after adding
   };
 
   const handleSubmit = async () => {
@@ -67,12 +78,16 @@ const DataTable = () => {
       alert('Permissions successfully updated.');
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       fetchClientCount();  // Refresh the client count after permissions are updated
 =======
 >>>>>>> 139791a (Integration between the server interface to the client interface)
 =======
       fetchClientCount();  // Refresh the client count after permissions are updated
 >>>>>>> ba951c1 (Add some counter part for the server UI)
+=======
+      fetchClientCount();
+>>>>>>> ca5a8da (Add some static change in the server UI of add some records for the table.)
     } catch (error) {
       console.error('Failed to update permissions:', error.response ? error.response.data : error.message);
       alert('Failed to update permissions.');
@@ -105,6 +120,15 @@ const DataTable = () => {
           ))}
         </tbody>
       </table>
+      <div>
+        <input
+          type="text"
+          value={newSourceName}
+          onChange={e => setNewSourceName(e.target.value)}
+          placeholder="Add new source name"
+        />
+        <button onClick={handleAddSource}>Add Source</button>
+      </div>
       <button className="button" onClick={handleSubmit}>Give Permissions!</button>
     </div>
   );
