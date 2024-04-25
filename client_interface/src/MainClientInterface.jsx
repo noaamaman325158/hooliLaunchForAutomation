@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; 
+import axios from 'axios';
 import './mainClientInterface.css';
 
 function ClientInterface() {
   const [connected, setConnected] = useState(false);
-  const [tableData, setTableData] = useState([]); 
+  const [tableData, setTableData] = useState([]);
   const [selectedAccounts, setSelectedAccounts] = useState([]);
-  const [clientCount, setClientCount] = useState(0); 
+  const [clientCount, setClientCount] = useState(0);
 
   useEffect(() => {
     const fetchAllowedDestinationsToTracking = async () => {
@@ -16,7 +16,7 @@ function ClientInterface() {
         console.log('Fetched data:', destinationsAllowed);
         setTableData(destinationsAllowed.map((destination, index) => ({
           id: index,
-          name: destination  
+          name: destination
         })));
       } catch (error) {
         console.error('Failed to fetch destinations:', error.response ? error.response.data : error.message);
@@ -25,25 +25,21 @@ function ClientInterface() {
 
     fetchAllowedDestinationsToTracking();
     fetchClientCount(); // Fetch initial client count on mount
-  }, []); 
+  }, []);
 
   const fetchClientCount = async () => {
     try {
       const response = await axios.get('http://localhost:3003/countConnectedClients');
-      console.log(`${response.data.count}`)
-      setClientCount(response.data.count); 
+      console.log(`${response.data.count}`);
+      setClientCount(response.data.count);
     } catch (error) {
       console.error('Failed to fetch client count:', error);
     }
   };
 
-  const handleConnect = () => {
+  const handleConnect = async () => {
     setConnected(true);
-<<<<<<< HEAD
->>>>>>> 3da80c1 (Add some static basic UI for the client)
-=======
-    fetchClientCount(); // Refresh the client count after connecting
->>>>>>> 2b4d497 (Inetgration of the clients counter with the backend)
+    await fetchClientCount(); // Refresh the client count after connecting
     console.log('Connected to server!');
   };
 
@@ -64,12 +60,7 @@ function ClientInterface() {
       <table className="table">
         <thead>
           <tr>
-<<<<<<< HEAD
-            <th>Account Name</th>
->>>>>>> 3da80c1 (Add some static basic UI for the client)
-=======
             <th>Bag TO Track</th>
->>>>>>> 2b4d497 (Inetgration of the clients counter with the backend)
             <th>Select</th>
           </tr>
         </thead>

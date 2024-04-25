@@ -5,23 +5,8 @@ import './permissionGivenSources.css';
 const DataTable = () => {
   const [tracking, setTracking] = useState({});
   const [tableData, setTableData] = useState([]);
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-  const [clientCount, setClientCount] = useState(0);  // State to hold the count of connected clients
-=======
->>>>>>> 139791a (Integration between the server interface to the client interface)
-=======
-  const [clientCount, setClientCount] = useState(0);  // State to hold the count of connected clients
->>>>>>> ba951c1 (Add some counter part for the server UI)
-=======
   const [clientCount, setClientCount] = useState(0);
-<<<<<<< HEAD
-  const [newSourceName, setNewSourceName] = useState(''); // New state for the name of the new source
->>>>>>> ca5a8da (Add some static change in the server UI of add some records for the table.)
-=======
-  const [newSourceName, setNewSourceName] = useState(''); 
->>>>>>> 5cbc4fd (Here I integrate also some delete operation)
+  const [newSourceName, setNewSourceName] = useState('');
 
   useEffect(() => {
     const storedTrackingData = localStorage.getItem('trackingData');
@@ -85,19 +70,19 @@ const DataTable = () => {
     }
   };
 
-const handleDeleteSource = async (sourceName, id) => {
-  try {
-    const response = await axios.delete(`http://localhost:3003/deleteSource?sourceName=${encodeURIComponent(sourceName)}`);
-    alert(response.data);
-    setTableData(prev => prev.filter(item => item.id !== id));
-    const newTracking = {...tracking};
-    delete newTracking[id];
-    setTracking(newTracking);
-  } catch (error) {
-    console.error('Error deleting source:', error.response ? error.response.data : error.message);
-    alert('Error deleting source: ' + (error.response ? error.response.data : error.message));
-  }
-};
+  const handleDeleteSource = async (sourceName, id) => {
+    try {
+      const response = await axios.delete(`http://localhost:3003/deleteSource?sourceName=${encodeURIComponent(sourceName)}`);
+      alert(response.data);
+      setTableData(prev => prev.filter(item => item.id !== id));
+      const newTracking = {...tracking};
+      delete newTracking[id];
+      setTracking(newTracking);
+    } catch (error) {
+      console.error('Error deleting source:', error.response ? error.response.data : error.message);
+      alert('Error deleting source: ' + (error.response ? error.response.data : error.message));
+    }
+  };
 
   const handleSubmit = async () => {
     console.log('Permissions given for:', tracking);
@@ -105,18 +90,7 @@ const handleDeleteSource = async (sourceName, id) => {
       const response = await axios.post('http://localhost:3003/updatePermissions', tracking);
       console.log('Permissions updated:', response.data);
       alert('Permissions successfully updated.');
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-      fetchClientCount();  // Refresh the client count after permissions are updated
-=======
->>>>>>> 139791a (Integration between the server interface to the client interface)
-=======
-      fetchClientCount();  // Refresh the client count after permissions are updated
->>>>>>> ba951c1 (Add some counter part for the server UI)
-=======
       fetchClientCount();
->>>>>>> ca5a8da (Add some static change in the server UI of add some records for the table.)
     } catch (error) {
       console.error('Failed to update permissions:', error.response ? error.response.data : error.message);
       alert('Failed to update permissions.');

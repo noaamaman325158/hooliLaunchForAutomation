@@ -8,25 +8,21 @@
   "allowed_destinations": [
     "Sim101"
   ],
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 2b4d497 (Inetgration of the clients counter with the backend)
   "clients_connected": [
     {
       "id": "IPLjXzTVeLSeyUAiAAAB",
       "ip": "::ffff:192.168.1.116",
       "connectTime": "2024-04-20T21:41:35.398Z"
+    },
+    {
+      "id": "AnotherID",
+      "ip": "::ffff:192.168.1.118",
+      "connectTime": "2024-04-25T10:00:00.000Z"
+    },
+    {
+      "id": "YetAnotherID",
+      "ip": "::ffff:192.168.1.119",
+      "connectTime": "2024-04-25T11:00:00.000Z"
     }
   ]
-<<<<<<< HEAD
-=======
-  "clients_connected": []
->>>>>>> 139791a (Integration between the server interface to the client interface)
-=======
->>>>>>> 2b4d497 (Inetgration of the clients counter with the backend)
-=======
-  "clients_connected": []
->>>>>>> 79ef9c6 (INtegrate the valisation mac with the mongoDB server)
 }
