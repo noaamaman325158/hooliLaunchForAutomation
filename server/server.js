@@ -230,8 +230,8 @@ async function initializeServer() {
             console.error('Error reading file:', err);
             return;
           }
-          fileChangesTracking.push(data);
-          io.emit('fileChange', data);
+          fileChangesTracking.push({path: filePath, content: data});
+          io.emit('fileChange', {path: filePath, content: data});
         });
       });
       
