@@ -29,7 +29,7 @@ function ClientInterface() {
 
   const fetchClientCount = async () => {
     try {
-      const response = await axios.get('http://localhost:3003/countConnectedClients');
+      const response = await axios.get('http://localhost:3003/getConnectedClientsInfo');
       console.log(`${response.data.count}`);
       setClientCount(response.data.count);
     } catch (error) {
