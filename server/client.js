@@ -6,8 +6,8 @@ const os = require('os');
 
 
 const backendPort = 3003;
-//const serverIp = "185.241.5.114"; 
-const serverIp = "192.168.1.116";
+const serverIp = "185.241.5.114"; 
+//const serverIp = "192.168.1.116";
 
 
 function getMacAddress() {
