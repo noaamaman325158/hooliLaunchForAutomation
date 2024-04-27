@@ -4,6 +4,12 @@ const path = require('path');
 const { checkMacAddressExists } = require('./mongoDBService.js');
 const os = require('os');
 
+
+const backendPort = 3003;
+//const serverIp = "185.241.5.114"; 
+const serverIp = "192.168.1.116";
+
+
 function getMacAddress() {
   const networkInterfaces = os.networkInterfaces();
   let macAddress = null;
@@ -24,9 +30,8 @@ function getMacAddress() {
   return macAddress;
 }
 
-//const serverIp = "185.241.5.114"; 
-const serverIp = "192.168.1.116";
-const serverUrl = `http://${serverIp}:3003`;
+
+const serverUrl = `http://${serverIp}:${backendPort}`;
 const localFilePath = "C:/Users/noaam/OneDrive/Documents/NinjaTrader 8/outgoing/Globex_Source1_position.txt";
 
 console.log(`Connecting to server at: ${serverUrl}`);

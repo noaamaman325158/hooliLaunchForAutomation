@@ -40,7 +40,10 @@ const DataTable = () => {
 
   const fetchClientCount = async () => {
     try {
-      const response = await axios.get('http://localhost:3003/getConnectedClientsInfo');
+      console.log('Inside the fetchClientCount ... ')
+      const response = await axios.get('http://localhost:3003/countConnectedClients');
+      console.log(`Inside the fetchClientCount response.data = ${response.data}`)
+      
       setClientCount(response.data.count);
     } catch (error) {
       console.error('Failed to fetch client count:', error);

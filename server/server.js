@@ -34,14 +34,11 @@ function getMacAddress() {
   return macAddress;
 }
 
-app.get('/getConnectedClientsInfo', (req, res) => {
-  const clientDetails = Object.values(clients).map(client => ({
-      socketId: client.socket.id,
-      ipAddress: client.ip,
-      connectionTime: client.connectTime
-  }));
-  res.json(clientDetails);
+app.get('/countConnectedClients', (req, res) => {
+  const numberOfConnectedClients = Object.keys(clients).length; 
+  res.json({ count: numberOfConnectedClients });
 });
+
 
 app.delete('/deleteSource', (req, res) => {
   console.log('Inside the deleteSource endpoint in the server');
