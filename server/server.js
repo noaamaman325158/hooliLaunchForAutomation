@@ -34,6 +34,12 @@ function getMacAddress() {
   return macAddress;
 }
 
+app.get('/countConnectedClients', (req, res) => {
+  const numberOfConnectedClients = Object.keys(clients).length; 
+  res.json({ count: numberOfConnectedClients });
+});
+
+
 app.delete('/deleteSource', (req, res) => {
   console.log('Inside the deleteSource endpoint in the server');
   const sourceName = req.query.sourceName; 
@@ -205,6 +211,11 @@ async function initializeServer() {
         ip: socket.request.connection.remoteAddress,
         connectTime: new Date()
       };
+      // For Debugging Purposes
+      console.log(`Client connected: ${socket.id}, IP: ${clientInfo.ip}`);
+      console.log(`Client disconnected: ${socket.id}`);
+      console.log(`Clients info requested: ${JSON.stringify(Object.values(clients))}`);
+
       clients[socket.id] = clientInfo;  
       updateSettingsWithClients(clients);
       console.log(`Client connected: ${socket.id} from IP: ${clientInfo.ip}`);
