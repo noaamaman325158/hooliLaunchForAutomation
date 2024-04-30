@@ -175,10 +175,10 @@ app.get('/getDestinationsTracking', async (req, res) => {
 async function initializeServer() {
   try {
     const settings = await getDestinationsFromSettings();
-    console.log(`Destinations tracking loaded: ${settings.destinations_tracking}`);
+    console.log(`Destinations tracking loaded: ${settings.allowed_destinations}`);
     // Assuming each destination is a file name you want to watch
-    const filesToWatch = settings.destinations_tracking.map(name => 
-      path.join(getUserDocumentsPath(), "NinjaTrader 8", "outgoing", `Globex_${name}_position.txt`)
+    const filesToWatch = settings.allowed_destinations.map(name => 
+      path.join(getUserDocumentsPath(), "NinjaTrader 8", "outgoing", `NQ 06-24 Globex_${name}_position.txt`)
     );
 
     console.log(`Files to watch: ${filesToWatch.join(", ")}`);
