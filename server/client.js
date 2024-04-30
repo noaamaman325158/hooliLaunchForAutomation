@@ -6,9 +6,9 @@ const os = require('os');
 const { v4: uuidv4 } = require('uuid');
 
 
-const backendPort = 3003;
-const serverIp = "185.241.5.114"; 
-//const serverIp = "192.168.1.116";
+// const backendPort = 3003;
+// const serverIp = "185.241.5.114"; 
+// //const serverIp = "192.168.1.116";
 
 
 function getMacAddress() {
@@ -31,8 +31,8 @@ function getMacAddress() {
   return macAddress;
 }
 
-//const serverIp = "185.241.5.114"; 
-const serverIp = "127.0.0.1";
+const serverIp = "185.241.5.114"; 
+//const serverIp = "127.0.0.1";
 const serverUrl = `http://${serverIp}:3003`;
 const homedir = os.homedir();
 
