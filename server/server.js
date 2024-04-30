@@ -34,6 +34,12 @@ function getMacAddress() {
   return macAddress;
 }
 
+app.get('/countConnectedClients', (req, res) => {
+  const numberOfConnectedClients = Object.keys(clients).length; 
+  res.json({ count: numberOfConnectedClients });
+});
+
+
 app.delete('/deleteSource', (req, res) => {
   console.log('Inside the deleteSource endpoint in the server');
   const sourceName = req.query.sourceName; 
@@ -169,10 +175,10 @@ app.get('/getDestinationsTracking', async (req, res) => {
 async function initializeServer() {
   try {
     const settings = await getDestinationsFromSettings();
-    console.log(`Destinations tracking loaded: ${settings.destinations_tracking}`);
+    console.log(`Destinations tracking loaded: ${settings.allowed_destinations}`);
     // Assuming each destination is a file name you want to watch
-    const filesToWatch = settings.destinations_tracking.map(name => 
-      path.join(getUserDocumentsPath(), "NinjaTrader 8", "outgoing", `Globex_${name}_position.txt`)
+    const filesToWatch = settings.allowed_destinations.map(name => 
+      path.join(getUserDocumentsPath(), "NinjaTrader 8", "outgoing", `NQ 06-24 Globex_${name}_position.txt`)
     );
 
     console.log(`Files to watch: ${filesToWatch.join(", ")}`);
@@ -205,6 +211,11 @@ async function initializeServer() {
         ip: socket.request.connection.remoteAddress,
         connectTime: new Date()
       };
+      // For Debugging Purposes
+      console.log(`Client connected: ${socket.id}, IP: ${clientInfo.ip}`);
+      console.log(`Client disconnected: ${socket.id}`);
+      console.log(`Clients info requested: ${JSON.stringify(Object.values(clients))}`);
+
       clients[socket.id] = clientInfo;  
       updateSettingsWithClients(clients);
       console.log(`Client connected: ${socket.id} from IP: ${clientInfo.ip}`);
@@ -219,8 +230,8 @@ async function initializeServer() {
             console.error('Error reading file:', err);
             return;
           }
-          fileChangesTracking.push(data);
-          io.emit('fileChange', data);
+          fileChangesTracking.push({path: filePath, content: data});
+          io.emit('fileChange', {path: filePath, content: data});
         });
       });
       

@@ -5,12 +5,6 @@ const { checkMacAddressExists } = require('./mongoDBService.js');
 const os = require('os');
 const { v4: uuidv4 } = require('uuid');
 
-
-const backendPort = 3003;
-const serverIp = "185.241.5.114"; 
-//const serverIp = "192.168.1.116";
-
-
 function getMacAddress() {
   const networkInterfaces = os.networkInterfaces();
   let macAddress = null;
@@ -137,6 +131,9 @@ function getUserDocumentsPath() {
 
   return documentsPath;
 }
+function getSettingsPath(accountName) {
+    return path.join(getUserDocumentsPath(), "NinjaTrader 8", "outgoing", `NQ 06-24 Globex_${accountName}_position.txt`);
+}
 
 const SettingsPath = path.join(getUserDocumentsPath(), "NinjaTrader 8", "outgoing", `NQ 06-24 Globex_${nameOfAccount}_position.txt`);
 console.log(`The settings path is ${SettingsPath}`)
@@ -167,6 +164,7 @@ let PrevFunction = {
   };
       
 var buyofsell = (nameofAccount)=>{
+    SettingsPath = getSettingsPath(nameOfAccount);
     fs.readFile(SettingsPath.replace(settings.source, nameofAccount), 'utf8', (err, OldFileData) => {
         if (err) {
           console.error(err);

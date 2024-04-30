@@ -17,6 +17,7 @@
     "mongoose": "^8.3.2",
     "mongose": "^0.0.2-security",
     "socket.io": "^4.7.5",
-    "socket.io-client": "^4.7.5"
+    "socket.io-client": "^4.7.5",
+    "uuid": "^9.0.1"
   }
 }
