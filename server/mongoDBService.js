@@ -32,13 +32,12 @@ function fetchMacAddresses() {
 }
 async function checkMacAddressExists(inputMacAddress) {
     try {
-        
+
         const result = await MacAddress.findOne({
-            $or: [
-                { mac1: inputMacAddress },
-                { mac2: inputMacAddress }
-            ]
+            mac1: inputMacAddress 
         });
+
+        console.log(result, inputMacAddress);
 
         if (result) {
             console.log(`MAC address ${inputMacAddress} exists in the database.`);
@@ -52,11 +51,5 @@ async function checkMacAddressExists(inputMacAddress) {
         return false;  
     }
 }
-
-
-
-
-fetchMacAddresses();
-checkMacAddressExists('00:50:56:3f:ee:07');
 
 module.exports = { fetchMacAddresses, checkMacAddressExists };
