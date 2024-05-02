@@ -7,7 +7,7 @@ function ClientInterface() {
   const [tableData, setTableData] = useState([]);
   const [selectedAccounts, setSelectedAccounts] = useState([]);
   const [clientCount, setClientCount] = useState(0);
-
+  const [newAccountName, setNewAccountName] = useState('');
   const serverIp = "185.241.5.114";
 
   useEffect(() => {
@@ -55,6 +55,21 @@ function ClientInterface() {
     });
   };
 
+  const handleAddAccount = () => {
+    if (newAccountName.trim()) {
+      const newAccount = {
+        id: tableData.length,
+        name: newAccountName.trim()
+      };
+      setTableData([...tableData, newAccount]);
+      setNewAccountName('');
+    }
+  };
+
+  const handleDeleteAccount = (accountId) => {
+    setTableData(tableData.filter(account => account.id !== accountId));
+  };
+
   return (
     <div className="table-container">
       <h1>Client Trade Copier Interface</h1>
@@ -64,6 +79,7 @@ function ClientInterface() {
           <tr>
             <th>Bag TO Track</th>
             <th>Select</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -77,10 +93,22 @@ function ClientInterface() {
                   onChange={() => handleCheckboxChange(account.id)}
                 />
               </td>
+              <td>
+                <button onClick={() => handleDeleteAccount(account.id)}>Delete</button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      <div>
+        <input
+          type="text"
+          value={newAccountName}
+          onChange={(e) => setNewAccountName(e.target.value)}
+          placeholder="Enter new account name"
+        />
+        <button onClick={handleAddAccount}>Add Account</button>
+      </div>
       <button onClick={handleConnect} disabled={connected} className="button">
         {connected ? 'Connected' : 'Connect to Server'}
       </button>
