@@ -8,12 +8,13 @@ function ClientInterface() {
   const [selectedAccounts, setSelectedAccounts] = useState([]);
   const [clientCount, setClientCount] = useState(0);
   const [newAccountName, setNewAccountName] = useState('');
-  const serverIp = "185.241.5.114";
-
+  //const serverIp = "185.241.5.114";
+  const serverIp = "127.0.0.1";
+  const serverPort = 3003;
   useEffect(() => {
     const fetchAllowedDestinationsToTracking = async () => {
       try {
-        const response = await axios.get(`http://${serverIp}:3003/getDestinationsAllowTracking`);
+        const response = await axios.get(`http://${serverIp}:${serverPort}/getDestinationsAllowTracking`);
         const destinationsAllowed = response.data;
         console.log('Fetched data:', destinationsAllowed);
         setTableData(destinationsAllowed.map((destination, index) => ({
@@ -31,7 +32,7 @@ function ClientInterface() {
 
   const fetchClientCount = async () => {
     try {
-      const response = await axios.get(`http://${serverIp}:3003/getConnectedClientsInfo`);
+      const response = await axios.get(`http://${serverIp}:${serverPort}/getConnectedClientsInfo`);
       console.log(`${response.data.count}`);
       setClientCount(response.data.count);
     } catch (error) {

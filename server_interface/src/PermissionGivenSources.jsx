@@ -8,6 +8,7 @@ const DataTable = () => {
   const [clientCount, setClientCount] = useState(0);
   const [newSourceName, setNewSourceName] = useState('');
   const serverIP = "185.241.5.114";
+  const serverPort = 3003;
   useEffect(() => {
     const storedTrackingData = localStorage.getItem('trackingData');
     if (storedTrackingData) {
@@ -23,7 +24,7 @@ const DataTable = () => {
 
   const fetchDestinationsToTracking = async () => {
     try {
-      const response = await axios.get(`http://${serverIP}:3003/getDestinationsTracking`);
+      const response = await axios.get(`http://${serverIP}:${serverPort}/getDestinationsTracking`);
       const destinations = response.data;
       setTableData(destinations.map((destination, index) => ({
         id: index,
@@ -41,7 +42,7 @@ const DataTable = () => {
   const fetchClientCount = async () => {
     try {
       console.log('Inside the fetchClientCount ... ')
-      const response = await axios.get(`http://${serverIP}:3003/countConnectedClients`);
+      const response = await axios.get(`http://${serverIP}:${serverPort}/countConnectedClients`);
       console.log(`Inside the fetchClientCount response.data = ${response.data}`)
       
       setClientCount(response.data.count);
@@ -60,7 +61,7 @@ const DataTable = () => {
       return;
     }
     try {
-      const response = await axios.post(`http://${serverIP}:3003/addSource`, { sourceName: newSourceName });
+      const response = await axios.post(`http://${serverIP}:${serverPort}/addSource`, { sourceName: newSourceName });
       alert(response.data);
       const newId = tableData.length;
       setTableData([...tableData, { id: newId, name: newSourceName }]);
@@ -75,7 +76,7 @@ const DataTable = () => {
 
   const handleDeleteSource = async (sourceName, id) => {
     try {
-      const response = await axios.delete(`http://${serverIP}:3003/deleteSource?sourceName=${encodeURIComponent(sourceName)}`);
+      const response = await axios.delete(`http://${serverIP}:${serverPort}/deleteSource?sourceName=${encodeURIComponent(sourceName)}`);
       alert(response.data);
       setTableData(prev => prev.filter(item => item.id !== id));
       const newTracking = {...tracking};
@@ -90,7 +91,7 @@ const DataTable = () => {
   const handleSubmit = async () => {
     console.log('Permissions given for:', tracking);
     try {
-      const response = await axios.post(`http://${serverIP}:3003/updatePermissions`, tracking);
+      const response = await axios.post(`http://${serverIP}:${serverPort}/updatePermissions`, tracking);
       console.log('Permissions updated:', response.data);
       alert('Permissions successfully updated.');
       fetchClientCount();
