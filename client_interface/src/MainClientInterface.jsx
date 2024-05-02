@@ -11,7 +11,7 @@ function ClientInterface() {
   useEffect(() => {
     const updateClientDestinations = async () => {
       const host = 'localhost'; // Change this to your host
-      const port = 3003; // Change this to your port
+      const port = 2648; // Change this to your port
       const endpoint = '/update-client-destinations';
 
       const url = `http://${host}:${port}${endpoint}`;

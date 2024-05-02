@@ -8,7 +8,7 @@ const DataTable = () => {
   const [clientCount, setClientCount] = useState(0);
   const [newSourceName, setNewSourceName] = useState('');
   const serverIP = "185.241.5.114";
-  const serverPort = 3003;
+  const serverPort = 2648;
   useEffect(() => {
     const storedTrackingData = localStorage.getItem('trackingData');
     if (storedTrackingData) {
