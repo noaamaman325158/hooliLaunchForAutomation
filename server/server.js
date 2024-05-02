@@ -150,6 +150,48 @@ app.get('/getDestinationsTracking', async (req, res) => {
     res.status(500).json({ error: "Failed to retrieve destinations tracking data" });
   }
 });
+//FOr update the current clients destinations
+app.put('/update-client-destinations', async (req, res) => {
+  console.log('Inside the endpoint in the server of update client destinations')
+  const { clientDestinations } = req.body;
+
+  if (clientDestinations && Array.isArray(clientDestinations)) {
+    try {
+      const settings = await getSettings(); // Assuming you have a function to read settings from a file
+      settings.client_destinations = clientDestinations;
+      await writeSettings(settings); // Assuming you have a function to write settings to a file
+      res.status(200).json(settings);
+    } catch (error) {
+      console.error('Error updating client destinations:', error);
+      res.status(500).json({ error: 'Failed to update client destinations' });
+    }
+  } else {
+    res.status(400).json({ error: 'Invalid client destinations' });
+  }
+});
+
+
+app.get('/getConnectedClientsInfo', (req, res) => {
+  const clientDetails = Object.values(clients).map(client => ({
+      socketId: client.socket.id,
+      ipAddress: client.ip,
+      connectionTime: client.connectTime
+  }));
+  res.json(clientDetails);
+});
+async function writeSettings(settings) {
+  const settingsPath = path.join(__dirname, 'settings.json');
+  return new Promise((resolve, reject) => {
+    fs.writeFile(settingsPath, JSON.stringify(settings, null, 2), 'utf8', (err) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
  // Cross Platform Support
  function getUserDocumentsPath() {
   let homeDir = os.homedir();
@@ -193,8 +235,8 @@ async function initializeServer() {
         .on('unlink', path => console.log(`File ${path} has been removed`))
         .on('error', error => console.log(`Watcher error: ${error}`))
         .on('ready', () => console.log('Initial scan complete. Ready for changes'));
-    serverIp = "185.241.5.114";
-
+    //serverIp = "185.241.5.114";
+    const serverIp = "127.0.0.1"
     const server = app.listen(port,serverIp ,() => {
       console.log(`Server listening at http://${serverIp}:${port}`);
     });
@@ -342,7 +384,7 @@ async function initializeServer() {
 //       }
 //     });
     
-//   } catch (error) {
+//   } catch (erro:r) {
 //     console.error('Failed to initialize the server:', error);
 //   }
 // }

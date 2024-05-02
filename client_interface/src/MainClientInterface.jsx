@@ -3,47 +3,52 @@ import axios from 'axios';
 import './mainClientInterface.css';
 
 function ClientInterface() {
-  const [connected, setConnected] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [selectedAccounts, setSelectedAccounts] = useState([]);
-  const [clientCount, setClientCount] = useState(0);
   const [newAccountName, setNewAccountName] = useState('');
-  //const serverIp = "185.241.5.114";
-  const serverIp = "127.0.0.1";
-  const serverPort = 3003;
+
+  
   useEffect(() => {
-    const fetchAllowedDestinationsToTracking = async () => {
+    const updateClientDestinations = async () => {
+      const host = 'localhost'; // Change this to your host
+      const port = 3003; // Change this to your port
+      const endpoint = '/update-client-destinations';
+
+      const url = `http://${host}:${port}${endpoint}`;
+
+      
+
+      console.log('Inside the update cllient ')
       try {
-        const response = await axios.get(`http://${serverIp}:${serverPort}/getDestinationsAllowTracking`);
-        const destinationsAllowed = response.data;
-        console.log('Fetched data:', destinationsAllowed);
-        setTableData(destinationsAllowed.map((destination, index) => ({
-          id: index,
-          name: destination
-        })));
+        const response = await axios.put(url, {
+          clientDestinations: tableData.map(account => account.name)
+        });
+        console.log('Settings file updated:', response.data);
       } catch (error) {
-        console.error('Failed to fetch destinations:', error.response ? error.response.data : error.message);
+        console.error('Error updating settings file:', error);
       }
     };
 
-    fetchAllowedDestinationsToTracking();
-    fetchClientCount(); // Fetch initial client count on mount
-  }, []);
+    const interval = setInterval(() => {
+      updateClientDestinations();
+    }, 2000);
 
-  const fetchClientCount = async () => {
-    try {
-      const response = await axios.get(`http://${serverIp}:${serverPort}/getConnectedClientsInfo`);
-      console.log(`${response.data.count}`);
-      setClientCount(response.data.count);
-    } catch (error) {
-      console.error('Failed to fetch client count:', error);
+    return () => clearInterval(interval);
+  }, [tableData]);
+
+  const handleAddAccount = () => {
+    if (newAccountName.trim()) {
+      const newAccount = {
+        id: Date.now(), // Use a unique identifier for the id
+        name: newAccountName.trim()
+      };
+      setTableData([...tableData, newAccount]);
+      setNewAccountName('');
     }
   };
 
-  const handleConnect = async () => {
-    setConnected(true);
-    await fetchClientCount(); // Refresh the client count after connecting
-    console.log('Connected to server!');
+  const handleDeleteAccount = (accountId) => {
+    setTableData(tableData.filter(account => account.id !== accountId));
   };
 
   const handleCheckboxChange = (accountId) => {
@@ -56,25 +61,9 @@ function ClientInterface() {
     });
   };
 
-  const handleAddAccount = () => {
-    if (newAccountName.trim()) {
-      const newAccount = {
-        id: tableData.length,
-        name: newAccountName.trim()
-      };
-      setTableData([...tableData, newAccount]);
-      setNewAccountName('');
-    }
-  };
-
-  const handleDeleteAccount = (accountId) => {
-    setTableData(tableData.filter(account => account.id !== accountId));
-  };
-
   return (
     <div className="table-container">
       <h1>Client Trade Copier Interface</h1>
-      <div className="client-count">Current Connections: {clientCount}</div>
       <table className="table">
         <thead>
           <tr>
@@ -110,9 +99,6 @@ function ClientInterface() {
         />
         <button onClick={handleAddAccount}>Add Account</button>
       </div>
-      <button onClick={handleConnect} disabled={connected} className="button">
-        {connected ? 'Connected' : 'Connect to Server'}
-      </button>
     </div>
   );
 }

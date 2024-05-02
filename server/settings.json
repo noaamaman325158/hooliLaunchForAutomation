@@ -8,5 +8,6 @@
   "allowed_destinations": [
     "Sim101"
   ],
-  "clients_connected": []
+  "clients_connected": [],
+  "client_destinations": []
 }
