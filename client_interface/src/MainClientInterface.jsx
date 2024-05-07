@@ -6,19 +6,18 @@ function ClientInterface() {
   const [tableData, setTableData] = useState([]);
   const [selectedAccounts, setSelectedAccounts] = useState([]);
   const [newAccountName, setNewAccountName] = useState('');
+  const [username, setUsername] = useState(''); // State for managing username input
+  const [submitting, setSubmitting] = useState(false); // State for managing the submission process
 
-  
+  const host = '185.241.5.114'; // Change this to your host
+  const port = 2648; // Change this to your port
   useEffect(() => {
     const updateClientDestinations = async () => {
-      const host = 'localhost'; // Change this to your host
-      const port = 2648; // Change this to your port
+      
       const endpoint = '/update-client-destinations';
-
       const url = `http://${host}:${port}${endpoint}`;
 
-      
-
-      console.log('Inside the update cllient ')
+      console.log('Inside the update client');
       try {
         const response = await axios.put(url, {
           clientDestinations: tableData.map(account => account.name)
@@ -29,10 +28,7 @@ function ClientInterface() {
       }
     };
 
-    const interval = setInterval(() => {
-      updateClientDestinations();
-    }, 2000);
-
+    const interval = setInterval(updateClientDestinations, 2000);
     return () => clearInterval(interval);
   }, [tableData]);
 
@@ -52,22 +48,45 @@ function ClientInterface() {
   };
 
   const handleCheckboxChange = (accountId) => {
-    setSelectedAccounts(prev => {
-      if (prev.includes(accountId)) {
-        return prev.filter(id => id !== accountId);
-      } else {
-        return [...prev, accountId];
-      }
-    });
+    setSelectedAccounts(prev => prev.includes(accountId) ? prev.filter(id => id !== accountId) : [...prev, accountId]);
+  };
+
+  const handleSubmitUsername = async () => {
+    if (!username.trim()) {
+      alert('Please enter a username.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const endpoint = "submitUsername";
+      await axios.post(`http://${host}:${port}/${endpoint}`, { username });
+      alert('Username submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting username:', error);
+      alert('Failed to submit username.');
+    }
+    setSubmitting(false);
   };
 
   return (
     <div className="table-container">
       <h1>Client Trade Copier Interface</h1>
+      <div>
+        <input
+          type="text"
+          placeholder="Enter your username"
+          value={username}
+          onChange={e => setUsername(e.target.value)}
+          className="username-input"
+        />
+        <button onClick={handleSubmitUsername} disabled={submitting} className="button">
+          {submitting ? 'Submitting...' : 'Submit Username'}
+        </button>
+      </div>
       <table className="table">
         <thead>
           <tr>
-            <th>Bag TO Track</th>
+            <th>Bag To Track</th>
             <th>Select</th>
             <th>Actions</th>
           </tr>
