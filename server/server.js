@@ -14,6 +14,7 @@ app.use(cors());
 app.use(express.json());
 let fileChangesTracking = [];
 let clients = {};  
+let clientsUsernames = [];
 
 
 
@@ -150,6 +151,18 @@ app.get('/getDestinationsTracking', async (req, res) => {
     res.status(500).json({ error: "Failed to retrieve destinations tracking data" });
   }
 });
+
+app.get('/getClientDestinationsTracking', async (req, res) => {
+  try {
+    const settings = await getDestinationsFromSettings();
+    const destinationsTracking = settings.client_destinations;
+    res.json(destinationsTracking); 
+  } catch (error) {
+    console.error('Failed to retrieve settings:', error);
+    res.status(500).json({ error: "Failed to retrieve destinations tracking data" });
+  }
+});
+
 //FOr update the current clients destinations
 app.put('/update-client-destinations', async (req, res) => {
   console.log('Inside the endpoint in the server of update client destinations')
@@ -191,6 +204,24 @@ async function writeSettings(settings) {
     });
   });
 }
+
+app.post('/submitUsername', (req, res) => {
+  console.log('Inside the submitusername endpoint in the server')
+  const { username } = req.body;
+
+  if (!username || username.trim() === '') {
+      return res.status(400).json({ message: 'Username is required and cannot be empty.' });
+  }
+
+
+  clientsUsernames.push(username);
+  console.log(`Current client usernames ${clientsUsernames}`)
+
+  console.log(`Received username: ${username}`);
+
+
+  res.status(200).json({ message: 'Username submitted successfully!' });
+});
 
  // Cross Platform Support
  function getUserDocumentsPath() {
