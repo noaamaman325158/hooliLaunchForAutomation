@@ -12,7 +12,7 @@ function ClientInterface() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`http://${host}:${port}/getClientDestinationsTracking`);
+        const response = await axios.get(`http://127.0.0.1:2649/getClientDestinationsTracking`);
         const destinations = response.data;
         setTableData(destinations.map((destination, index) => ({
           id: index,
@@ -68,13 +68,33 @@ function ClientInterface() {
   };
   
 
-  const handleDeleteAccount = (accountId) => {
-    setTableData(prev => prev.filter(account => account.id !== accountId));
-    const updatedTracking = { ...tracking };
-    delete updatedTracking[accountId];
-    setTracking(updatedTracking);
+  const handleDeleteAccount = async (accountId) => {
+    const accountName = tableData.find(account => account.id === accountId).name;
+  
+    try {
+      // Send a DELETE request to the /deleteSource endpoint with the account name as a query parameter
+      const response = await axios.delete(`http://${host}:${port}/deleteSource`, {
+        params: { sourceName: accountName }
+      });
+  
+      // Check response status or data here if necessary, e.g.:
+      if (response.status === 200) {
+        // Update local state to remove the account from the UI
+        setTableData(prev => prev.filter(account => account.id !== accountId));
+        const updatedTracking = { ...tracking };
+        delete updatedTracking[accountId];
+        setTracking(updatedTracking);
+        alert('Account deleted successfully');
+      } else {
+        throw new Error(response.data || 'Failed to delete account');
+      }
+    } catch (error) {
+      // Handle errors from the server response or connection issues
+      console.error('Error deleting account:', error.response ? error.response.data : error.message);
+      alert('Error deleting account: ' + (error.response ? error.response.data : error.message));
+    }
   };
-
+  
   const toggleTracking = (accountId) => {
     setTracking(prev => ({ ...prev, [accountId]: !prev[accountId] }));
   };

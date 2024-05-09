@@ -261,3 +261,44 @@ var buyofsell = (nameofAccount)=>{
         });
     });
   });
+
+  
+app.delete('/deleteSource', (req, res) => {
+  console.log('Inside the deleteSource endpoint in the server');
+  const sourceName = req.query.sourceName; 
+  if (!sourceName) {
+    return res.status(400).send('Source name is required');
+  }
+
+  fs.readFile('./settings.json', (err, data) => {
+    if (err) {
+      return res.status(500).send('Failed to read settings');
+    }
+
+    const settings = JSON.parse(data);
+    const index = settings.client_destinations.indexOf(sourceName);
+    if (index === -1) {
+      return res.status(404).send('Source not found');
+    }
+
+    settings.client_destinations.splice(index, 1);
+
+    fs.writeFile('./settings.json', JSON.stringify(settings, null, 2), (err) => {
+      if (err) {
+        return res.status(500).send('Failed to update settings');
+      }
+      res.send('Source deleted successfully');
+    });
+  });
+});
+
+app.get('/getClientDestinationsTracking', async (req, res) => {
+  try {
+    const settings = await getDestinationsFromSettings();
+    const destinationsTracking = settings.client_destinations;
+    res.json(destinationsTracking); 
+  } catch (error) {
+    console.error('Failed to retrieve settings:', error);
+    res.status(500).json({ error: "Failed to retrieve destinations tracking data" });
+  }
+});
