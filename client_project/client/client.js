@@ -264,8 +264,9 @@ var buyofsell = (nameofAccount)=>{
 
   
 app.delete('/deleteSource', (req, res) => {
-  console.log('Inside the deleteSource endpoint in the server');
+  console.log('Inside the deleteSource endpoint in the client');
   const sourceName = req.query.sourceName; 
+  console.log(`THe sourceName inside the client ${sourceName}`)
   if (!sourceName) {
     return res.status(400).send('Source name is required');
   }
@@ -302,3 +303,22 @@ app.get('/getClientDestinationsTracking', async (req, res) => {
     res.status(500).json({ error: "Failed to retrieve destinations tracking data" });
   }
 });
+async function getDestinationsFromSettings() {
+  const settingsPath = path.join(__dirname, 'settings.json');
+  return new Promise((resolve, reject) => {
+    fs.readFile(settingsPath, 'utf8', (err, data) => {
+      if (err) {
+        console.error('Error reading settings.json:', err);
+        reject(new Error('Failed to read settings'));
+        return;
+      }
+      try {
+        const settings = JSON.parse(data);
+        resolve(settings);
+      } catch (parseError) {
+        console.error('Error parsing settings.json:', parseError);
+        reject(new Error('Failed to parse settings'));
+      }
+    });
+  });
+}
