@@ -266,8 +266,8 @@ async function initializeServer() {
         .on('unlink', path => console.log(`File ${path} has been removed`))
         .on('error', error => console.log(`Watcher error: ${error}`))
         .on('ready', () => console.log('Initial scan complete. Ready for changes'));
-    //serverIp = "185.241.5.114";
-    const serverIp = "127.0.0.1"
+    const serverIp = "185.241.5.114";
+   // const serverIp = "127.0.0.1"
     const server = app.listen(port,serverIp ,() => {
       console.log(`Server listening at http://${serverIp}:${port}`);
     });
