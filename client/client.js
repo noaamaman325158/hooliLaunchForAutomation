@@ -4,7 +4,19 @@ const path = require('path');
 const { checkMacAddressExists } = require('./mongoDBService.js');
 const os = require('os');
 const { v4: uuidv4 } = require('uuid');
+const express = require('express');
+const cors = require('cors');
 
+
+const app = express();
+
+const port = 2649;
+app.use(cors());
+app.use(express.json());
+
+app.listen(port, () => {
+  console.log(`client running on http://localhost:${port}`);
+});
 
 // const backendPort = 3003;
 // const serverIp = "185.241.5.114"; 
@@ -56,7 +68,16 @@ socket.on('connect', async () => {
     if (!macAddressExists) {
         console.log('Current MAC address does not exist in the database. Stopping client server.');
         process.exit(1); 
-    }
+    }  app.get('/getClientDestinationsAllowTracking', async (req, res) => {
+      try {
+        const settings = await getDestinationsFromSettings();
+        const destinationsTrackingAllowed = settings.client_destinations;
+        res.json(destinationsTrackingAllowed); 
+      } catch (error) {
+        console.error('Failed to retrieve settings:', error);
+        res.status(500).json({ error: "Failed to retrieve destinations tracking data" });
+      }
+    });
 });
 
 socket.on('initialFileChanges', (fileChanges) => {
@@ -207,5 +228,36 @@ var buyofsell = (nameofAccount)=>{
   
   };
   
+
   
+
+  app.post('/addSource', (req, res) => {
+    console.log('Inside the addSource endpoint in the client code')
+    const { sourceName } = req.body;
+    if (!sourceName) {
+        return res.status(400).send('Source name is required');
+    }
   
+    fs.readFile('./settings.json', (err, data) => {
+        if (err) {
+            return res.status(500).send('Failed to read settings');
+        }
+  
+        const settings = JSON.parse(data);
+        if (!settings.client_destinations) {
+            settings.client_destinations = [];
+        }
+        if (settings.client_destinations.includes(sourceName)) {
+            return res.status(409).send('Source already exists');
+        }
+  
+        settings.client_destinations.push(sourceName);
+  
+        fs.writeFile('./settings.json', JSON.stringify(settings, null, 2), (err) => {
+            if (err) {
+                return res.status(500).send('Failed to update settings');
+            }
+            res.send('Source added successfully');
+        });
+    });
+  });

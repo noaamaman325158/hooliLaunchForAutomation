@@ -4,90 +4,89 @@ import './mainClientInterface.css';
 
 function ClientInterface() {
   const [tableData, setTableData] = useState([]);
-  const [selectedAccounts, setSelectedAccounts] = useState([]);
+  const [tracking, setTracking] = useState({});
   const [newAccountName, setNewAccountName] = useState('');
-  const [username, setUsername] = useState(''); // State for managing username input
-  const [submitting, setSubmitting] = useState(false); // State for managing the submission process
+  const host = '185.241.5.114';
+  const port = 2648;
 
-  const host = '185.241.5.114'; // Change this to your host
-  const port = 2648; // Change this to your port
   useEffect(() => {
-    const updateClientDestinations = async () => {
-      
-      const endpoint = '/update-client-destinations';
-      const url = `http://${host}:${port}${endpoint}`;
-
-      console.log('Inside the update client');
+    const fetchData = async () => {
       try {
-        const response = await axios.put(url, {
-          clientDestinations: tableData.map(account => account.name)
-        });
-        console.log('Settings file updated:', response.data);
+        const response = await axios.get(`http://${host}:${port}/getClientDestinationsTracking`);
+        const destinations = response.data;
+        setTableData(destinations.map((destination, index) => ({
+          id: index,
+          name: destination
+        })));
+
+        const initialTracking = destinations.reduce((acc, destination, index) => ({
+          ...acc,
+          [index]: acc[index] !== undefined ? acc[index] : false
+        }), JSON.parse(localStorage.getItem('trackingData') || '{}'));
+        setTracking(initialTracking);
       } catch (error) {
-        console.error('Error updating settings file:', error);
+        console.error('Failed to fetch destinations:', error.response ? error.response.data : error.message);
       }
     };
 
-    const interval = setInterval(updateClientDestinations, 2000);
-    return () => clearInterval(interval);
-  }, [tableData]);
+    fetchData();
+  }, [host, port]);
 
-  const handleAddAccount = () => {
-    if (newAccountName.trim()) {
-      const newAccount = {
-        id: Date.now(), // Use a unique identifier for the id
-        name: newAccountName.trim()
-      };
-      setTableData([...tableData, newAccount]);
-      setNewAccountName('');
-    }
-  };
+  // Save tracking data to localStorage on changes
+  useEffect(() => {
+    localStorage.setItem('trackingData', JSON.stringify(tracking));
+  }, [tracking]);
 
-  const handleDeleteAccount = (accountId) => {
-    setTableData(tableData.filter(account => account.id !== accountId));
-  };
-
-  const handleCheckboxChange = (accountId) => {
-    setSelectedAccounts(prev => prev.includes(accountId) ? prev.filter(id => id !== accountId) : [...prev, accountId]);
-  };
-
-  const handleSubmitUsername = async () => {
-    if (!username.trim()) {
-      alert('Please enter a username.');
+  const handleAddAccount = async () => {
+    if (!newAccountName.trim()) {
+      alert('Account name cannot be empty');
       return;
     }
-    setSubmitting(true);
     try {
-      const endpoint = "submitUsername";
-      await axios.post(`http://${host}:${port}/${endpoint}`, { username });
-      alert('Username submitted successfully!');
+      // Send a POST request to the /addSource endpoint with the new account name
+      const response = await axios.post(`http://127.0.0.1:2649/addSource`, { sourceName: newAccountName.trim() });
+  
+      // Check response status or data here if necessary, e.g.:
+      if (response.status === 200) {
+        // Assuming the server responds with the added account data or a success message
+        const newAccount = {
+          id: tableData.length, // Or derive from response if ID is returned from server
+          name: newAccountName.trim()
+        };
+        setTableData([...tableData, newAccount]);
+        setTracking(prev => ({ ...prev, [newAccount.id]: false }));
+        setNewAccountName('');
+        alert('Account added successfully');
+      } else {
+        throw new Error(response.data || 'Failed to add account');
+      }
     } catch (error) {
-      console.error('Error submitting username:', error);
-      alert('Failed to submit username.');
+      // Handle errors from the server response or connection issues
+      console.error('Error adding account:', error.response ? error.response.data : error.message);
+      alert('Error adding account: ' + (error.response ? error.response.data : error.message));
     }
-    setSubmitting(false);
+  };
+  
+
+  const handleDeleteAccount = (accountId) => {
+    setTableData(prev => prev.filter(account => account.id !== accountId));
+    const updatedTracking = { ...tracking };
+    delete updatedTracking[accountId];
+    setTracking(updatedTracking);
+  };
+
+  const toggleTracking = (accountId) => {
+    setTracking(prev => ({ ...prev, [accountId]: !prev[accountId] }));
   };
 
   return (
     <div className="table-container">
       <h1>Client Trade Copier Interface</h1>
-      <div>
-        <input
-          type="text"
-          placeholder="Enter your username"
-          value={username}
-          onChange={e => setUsername(e.target.value)}
-          className="username-input"
-        />
-        <button onClick={handleSubmitUsername} disabled={submitting} className="button">
-          {submitting ? 'Submitting...' : 'Submit Username'}
-        </button>
-      </div>
       <table className="table">
         <thead>
           <tr>
-            <th>Bag To Track</th>
-            <th>Select</th>
+            <th>Account</th>
+            <th>Tracking</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -98,8 +97,8 @@ function ClientInterface() {
               <td>
                 <input
                   type="checkbox"
-                  checked={selectedAccounts.includes(account.id)}
-                  onChange={() => handleCheckboxChange(account.id)}
+                  checked={!!tracking[account.id]}
+                  onChange={() => toggleTracking(account.id)}
                 />
               </td>
               <td>

@@ -420,7 +420,7 @@ async function initializeServer() {
 //   }
 // }
 
-app.get('/getDestinationsAllowTracking', async (req, res) => {
+app.get('/getClientDestinationsAllowTracking', async (req, res) => {
   try {
     const settings = await getDestinationsFromSettings();
     const destinationsTrackingAllowed = settings.client_destinations;

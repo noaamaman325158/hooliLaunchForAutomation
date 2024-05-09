@@ -88,18 +88,6 @@ const DataTable = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    console.log('Permissions given for:', tracking);
-    try {
-      const response = await axios.post(`http://${serverIP}:${serverPort}/updatePermissions`, tracking);
-      console.log('Permissions updated:', response.data);
-      alert('Permissions successfully updated.');
-      fetchClientCount();
-    } catch (error) {
-      console.error('Failed to update permissions:', error.response ? error.response.data : error.message);
-      alert('Failed to update permissions.');
-    }
-  };
 
   return (
     <div className="table-container">
@@ -140,7 +128,6 @@ const DataTable = () => {
         />
         <button onClick={handleAddSource}>Add Source</button>
       </div>
-      <button className="button" onClick={handleSubmit}>Give Permissions!</button>
     </div>
   );
 };
