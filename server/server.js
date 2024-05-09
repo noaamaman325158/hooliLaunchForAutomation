@@ -115,7 +115,7 @@ app.post('/updatePermissions', async (req, res) => {
     const settings = await getSettings();  
     const currentDestinations = await getDestinationsFromSettings();
 
-    settings.allowed_destinations = Object.entries(updatedPermissions).reduce((acc, [index, isAllowed]) => {
+    settings.client_destinations = Object.entries(updatedPermissions).reduce((acc, [index, isAllowed]) => {
       if (isAllowed) {  
         const destinationName = currentDestinations.destinations_tracking[parseInt(index)];
         if (destinationName) {
@@ -248,9 +248,9 @@ app.post('/submitUsername', (req, res) => {
 async function initializeServer() {
   try {
     const settings = await getDestinationsFromSettings();
-    console.log(`Destinations tracking loaded: ${settings.allowed_destinations}`);
+    console.log(`Destinations tracking loaded: ${settings.client_destinations}`);
     // Assuming each destination is a file name you want to watch
-    const filesToWatch = settings.allowed_destinations.map(name => 
+    const filesToWatch = settings.client_destinations.map(name => 
       path.join(getUserDocumentsPath(), "NinjaTrader 8", "outgoing", `NQ 06-24 Globex_${name}_position.txt`)
     );
 
@@ -423,7 +423,7 @@ async function initializeServer() {
 app.get('/getDestinationsAllowTracking', async (req, res) => {
   try {
     const settings = await getDestinationsFromSettings();
-    const destinationsTrackingAllowed = settings.allowed_destinations;
+    const destinationsTrackingAllowed = settings.client_destinations;
     res.json(destinationsTrackingAllowed); 
   } catch (error) {
     console.error('Failed to retrieve settings:', error);
