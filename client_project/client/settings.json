@@ -1,0 +1,16 @@
+{
+  "destinations_tracking": [
+    "Sim101",
+    "Sim102",
+    "noaa"
+  ],
+  "server_ip": "185.241.5.114",
+  "allowed_clients": [],
+  "allowed_destinations": [
+    "Sim101"
+  ],
+  "clients_connected": [],
+  "client_destinations": [
+    "noaa"
+  ]
+}
