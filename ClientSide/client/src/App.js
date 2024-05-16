@@ -15,16 +15,23 @@ function App() {
 
   const host = '185.241.5.114';
   const port = 1234;
-  const [destination, setDestination] = useState("Sim108"); 
-  const [allDestinations, setAllDestinationsData]=useState(["Sim102", "Sim103"]); 
+  const [destination, setDestination] = useState(""); 
+  const [allDestinations, setAllDestinationsData]=useState([]); 
   
 
   // after component mount...
   useEffect(() => {
     // connect to the socket server
     socket = io("ws://127.0.0.1:2222");
+
+    
+    socket.on('SendAllData', (AllData) => {
+      setAllDestinationsData(AllData.destinations);
+      setDestination(AllData.destinations[0])   
+    });
     
   }, []);
+
   const handleAddAccount = async(value)=>{
     setAllDestinationsData([...allDestinations,destination ])
     socket.emit('AddDestination', destination);

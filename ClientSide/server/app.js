@@ -17,15 +17,12 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 LOCAL_MEMORY={
-  "destinations_tracking": [
+  "destinations": [
     "Sim101",
-    "Sim102",
   ],
   "server_ip": "185.241.5.114",
   "allowed_clients": [],
-  "allowed_destinations": [
-    "Sim101"
-  ],
+  
   "clients_connected": [],
   "client_destinations": [
   ]
@@ -33,25 +30,22 @@ LOCAL_MEMORY={
 const SettingsPath = `${LOCAL_MEMORY.ComputerWindowsPAth}NQ 06-24 Globex_${LOCAL_MEMORY.source}_position.txt`;
 
 io.on('connection', (socket) => {
-  console.log('Client connected -CLIENT SERVER SIDE');
-  //socket.emit("SendAllData", LOCAL_MEMORY)
+  console.log('Client connected -CLIENT SERVER SIDE',LOCAL_MEMORY.destinations );
+  socket.emit("SendAllData", LOCAL_MEMORY)
 
   socket.on('disconnect', () => {
       console.log('Client disconnected');
   });
 
-socket.on('UpdateSource', (value) => {
-  LOCAL_MEMORY.source= value;
-  console.log("UpdateSource", value)
-});
-
 socket.on('DeleteDestination', (value) => {
-  console.log('Server DeleteDestination');
-  LOCAL_MEMORY.destinations =   LOCAL_MEMORY.destinations.filter(item => item !== value)
+  console.log('Server DeleteDestination', value);
+  LOCAL_MEMORY.destinations = LOCAL_MEMORY.destinations.filter(item => item !== value);
+  console.log("new Local memory", LOCAL_MEMORY)
 });
 socket.on('AddDestination', (value) => {
-  console.log('Server UpdateDestination');
+  
   LOCAL_MEMORY.destinations.push(value);
+  console.log('Server UpdateDestination', LOCAL_MEMORY.destinations);
 });
 
 socket.on('NewTrade', (value) => {
