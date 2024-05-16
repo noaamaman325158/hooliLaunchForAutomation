@@ -33,7 +33,7 @@ LOCAL_MEMORY={
 const SettingsPath = `${LOCAL_MEMORY.ComputerWindowsPAth}NQ 06-24 Globex_${LOCAL_MEMORY.source}_position.txt`;
 
 io.on('connection', (socket) => {
-  console.log('Client connected');
+  console.log('Client connected -CLIENT SERVER SIDE');
   //socket.emit("SendAllData", LOCAL_MEMORY)
 
   socket.on('disconnect', () => {
