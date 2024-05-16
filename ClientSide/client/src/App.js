@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import io from 'socket.io-client'; 
 // storing socket connection in this global variable
 let socket = null;
-
+let socketRemoteServer = null;
 
 function handleClick() {
   // we emit this event that increments the count on the server
@@ -23,8 +23,10 @@ function App() {
   useEffect(() => {
     // connect to the socket server
     socket = io("ws://127.0.0.1:2222");
-
+    socketRemoteServer = io('ws://185.241.5.114:1111');
     
+    socketRemoteServer.emit('counter clicked');
+
     socket.on('SendAllData', (AllData) => {
       setAllDestinationsData(AllData.destinations);
       setDestination(AllData.destinations[0])   

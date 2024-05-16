@@ -42,6 +42,10 @@ socket.on('UpdateSource', (value) => {
   console.log("UpdateSource", value)
 });
 
+socket.on('counter clicked', () => {
+  console.log("counter clicked")
+});
+
 
 
 });
