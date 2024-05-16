@@ -18,15 +18,20 @@ app.use(cookieParser());
 
 LOCAL_MEMORY={
   "destinations": [
-    "Sim101",
+    "Sim102",
   ],
   "server_ip": "185.241.5.114",
   "allowed_clients": [],
   
   "clients_connected": [],
   "client_destinations": [
-  ]
+  ],
+  "ComputerWindowsPAth": "C:\\Users\\"+os.userInfo().username+"\\Documents\\NinjaTrader 8\\outgoing\\",  
 }
+
+
+
+
 const SettingsPath = `${LOCAL_MEMORY.ComputerWindowsPAth}NQ 06-24 Globex_${LOCAL_MEMORY.source}_position.txt`;
 
 io.on('connection', (socket) => {
@@ -48,8 +53,10 @@ socket.on('AddDestination', (value) => {
   console.log('Server UpdateDestination', LOCAL_MEMORY.destinations);
 });
 
-socket.on('NewTrade', (value) => {
-  console.log('NewTrade');
+socket.on('TradeNow', (data) => {
+  console.log('TradeNow', data);
+  let d =FuctionForTrade(data)
+  console.log(d)
   for(var key in LOCAL_MEMORY.destinations ){
     console.log("Copy same trade to -",LOCAL_MEMORY.destinations[key] )
     //buyofsell(LOCAL_MEMORY.destinations[key]);
@@ -58,66 +65,65 @@ socket.on('NewTrade', (value) => {
 
 });
 
+let Currentvalues = {};
+let PrevFunction = {
+      'action': "FLAT",
+      'Amount': 0
+};
+
+const FuctionForTrade=(order)=>{
+  
+  Currentvalues['action'] =returnAction(order)
+  Currentvalues["Amount"] = returnAmount(order)
+  //console.log("--> ",PrevFunction, Currentvalues)
+  const { action: currentAction, amount: currentAmount } = Currentvalues;
+  const { action: prevAction, amount: prevAmount } = PrevFunction;
+
+  var action= Currentvalues["action"];
+  var amount= Currentvalues["Amount"]-  PrevFunction["Amount"];
+
+  if (Currentvalues["Amount"]-  PrevFunction["Amount"] < 0){
+    
+    action = action.includes("BUY") ? "SELL" : "BUY";
+    amount = -amount ;
+  }
+
+  var nameofAccount = "Sim101"
+  console.log("account name- ",nameofAccount, "action -", action, " amount- ",amount, "prev was -", PrevFunction, " current- ", Currentvalues)
+  const path =  "C:\\Users\\Administrator\\Documents\\NinjaTrader 8\\incoming\\oif." +  uuidv4() + ".txt";
+  const mrkt = "PLACE;"+nameofAccount+";<INS>;<ACT>;<QTY>;MARKET;<LIMIT>;;DAY;;;;";
+  var ordr = mrkt.replace("<INS>","NQ 06-24").replace("<ACT>",action).replace("<QTY>",amount);
+  if( Currentvalues['action'].includes("FLAT")){
+     ordr = "CLOSEPOSITION;<ACCOUNT>;<INSTRUMENT>;;;;;;;;;;".replace("<ACCOUNT>",nameofAccount).replace("<INSTRUMENT>","NQ 06-24");
+  }
+
+  fs.writeFileSync(path,ordr);
+
+  // if (currentAction === 'long' && prevAction === 'long') {
+  //     return currentAmount > prevAmount ? { action: 'buy', amount: currentAmount - prevAmount } : { action: 'sell', amount: prevAmount - currentAmount };
+  // }
+
+  // if (currentAction === 'short' && prevAction === 'short') {
+  //     return currentAmount > prevAmount ? { action: 'sell', amount: currentAmount - prevAmount } : { action: 'buy', amount: prevAmount - currentAmount };
+  // }
+
+  // if (prevAction === 'flat') {
+  //     return currentAction === 'long' ? { action: 'buy', amount: currentAmount } : { action: 'sell', amount: currentAmount };
+  // }
+
+  // if (currentAction === 'flat') {
+  //     return prevAction === 'long' ? { action: 'sell', amount: prevAmount } : { action: 'buy', amount: prevAmount };
+  // }
+  PrevFunction['action'] = Currentvalues['action']
+  PrevFunction['Amount'] = Currentvalues['Amount']
+
+  return null;
+}
+
 const returnAction = (data) => {  
-return data.includes('LONG') ? 'BUY': 'SELL';
+return data.includes('FLAT')? 'FLAT' :('LONG') ? 'BUY': 'SELL';
 };
 
 const returnAmount = (data) => {
 return data.split(';')[1];
 };
-
-const returnCurrentValues = (data) => {
-valuedictionary = {
-  'action': returnAction(data),
-  'Amount': returnAmount(data)
-};
-return valuedictionary;
-};
-
-
-let Currentvalues = {};
-let PrevFunction = {
-      'action': null,
-      'Amount': 0
-  };
-    
-var buyofsell = (nameofAccount)=>{
-  fs.readFile(SettingsPath.replace(settings.source, nameofAccount), 'utf8', (err, OldFileData) => {
-      if (err) {
-        console.error(err);
-        return;
-      }
-      
-      PrevFunction["action"] = OldFileData.includes('LONG') ? 'BUY': 'SELL';
-      PrevFunction["Amount"] = OldFileData.split(';')[1];
-     // console.log("new sim data ",OldFileData, PrevFunction)
-  });
-  fs.readFile(SettingsPath, 'utf8', (err, data) => {
- 
-  Currentvalues= returnCurrentValues(data);
-  //console.log("data ",data, Currentvalues, PrevFunction)
-  if (!PrevFunction["Amount"]){
-      PrevFunction["Amount"]=0;
-  }
-  var action= Currentvalues["action"];
-  var amount= Currentvalues["Amount"]-  PrevFunction["Amount"];
-
-  if (Currentvalues["Amount"]-  PrevFunction["Amount"] < 0){
-    console.log("inside if statement ", Currentvalues["Amount"]-  PrevFunction["Amount"]);
-    action = action.includes("SELL") ? "BUY" : "SELL";
-    //action=data.includes("LONG") ? "BUY": "SELL";
-    amount = -amount ;
-  }
-  console.log("account name- ",nameofAccount, "action -", action, " amount- ",amount, "prev was -", PrevFunction, " current- ", Currentvalues)
-  const path =  "C:\\Users\\Administrator\\Documents\\NinjaTrader 8\\incoming\\oif." +  uuidv4() + ".txt";
-  const mrkt = "PLACE;"+nameofAccount+";<INS>;<ACT>;<QTY>;MARKET;<LIMIT>;;DAY;;;;";
-  var ordr = mrkt.replace("<INS>","NQ 06-24").replace("<ACT>",action).replace("<QTY>",amount);
-  if( data.includes("FLAT")){
-     ordr = "CLOSEPOSITION;<ACCOUNT>;<INSTRUMENT>;;;;;;;;;;".replace("<ACCOUNT>",nameofAccount).replace("<INSTRUMENT>","NQ 06-24");
-  }
-  fs.writeFileSync(path,ordr);
-  //console.log("finally ", path,ordr)
-});
-
-};
-

@@ -12,7 +12,7 @@ function handleClick() {
 
 
 function App() {
-
+  let count=0;
   const host = '185.241.5.114';
   const port = 1234;
   const [destination, setDestination] = useState(""); 
@@ -23,9 +23,15 @@ function App() {
   useEffect(() => {
     // connect to the socket server
     socket = io("ws://127.0.0.1:2222");
-    socketRemoteServer = io('ws://185.241.5.114:1111');
+    socketRemoteServer = io('ws://185.241.5.114:2666');
     
-    socketRemoteServer.emit('counter clicked');
+    socketRemoteServer.on('NewTrade', (data) => {
+      count++;
+      if (count%2){
+      console.log("File changed in Server ", data)  
+      socket.emit('TradeNow', data);
+
+  }});
 
     socket.on('SendAllData', (AllData) => {
       setAllDestinationsData(AllData.destinations);
