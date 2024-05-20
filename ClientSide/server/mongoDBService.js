@@ -11,9 +11,10 @@ mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
         console.error("Error name: ", err.name);
         console.error("Error message: ", err.message);
         console.error("Error stack: ", err.stack);
-    });
+    })
+    ;
 
-console.log('Attempting to connect to MongoDB...');
+//console.log('Attempting to connect to MongoDB...');
 
 // Define the schema for the MAC addresses
 const macAddressSchema = new mongoose.Schema({
@@ -29,7 +30,7 @@ const MacAddress = mongoose.model('MacAddress', macAddressSchema, 'mac_addresses
 function fetchMacAddresses() {
     MacAddress.find({})
         .then(macAddresses => {
-            console.log('MAC addresses:', macAddresses);
+            //console.log('MAC addresses:', macAddresses);
         })
         .catch(err => {
             console.error('Error fetching MAC addresses:', err);
