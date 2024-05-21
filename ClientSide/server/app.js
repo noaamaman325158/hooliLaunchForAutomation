@@ -45,26 +45,30 @@ socket.on('DeleteDestination', (value) => {
   console.log("new Local memory", LOCAL_MEMORY)
 });
 socket.on('AddDestination', (value) => {
-  
   LOCAL_MEMORY.destinations.push(value);
   console.log('Server UpdateDestination', LOCAL_MEMORY.destinations);
 });
 
 socket.on('TradeNow', (data) => {
-  console.log('TradeNow', data);
-  
+  console.log('TradeNow', data, new Date());
   for(var key in LOCAL_MEMORY.destinations ){
     console.log("Copy same trade to -",LOCAL_MEMORY.destinations[key] )
     FuctionForTrade(data, LOCAL_MEMORY.destinations[key])
   }
+  console.log('Finish Trade');
 });
 });
 
 let Currentvalues = {};
 let PrevFunction = {
+  "Sim102":{
       'action': "FLAT",
       'Amount': 0
-};
+  },
+  "Sim101":{
+    'action': "FLAT",
+    'Amount': 0
+}};
 
 const FuctionForTrade=(order, nameofAccount)=>{
   
@@ -73,9 +77,9 @@ const FuctionForTrade=(order, nameofAccount)=>{
   console.log("--> ",PrevFunction, Currentvalues)
 
   var action= Currentvalues["action"];
-  var amount= Currentvalues['Amount']-  PrevFunction['Amount'];
+  var amount= Currentvalues['Amount']-  PrevFunction[nameofAccount]['Amount'];
 
-  if (Currentvalues['Amount']-  PrevFunction["Amount"] < 0){
+  if (Currentvalues['Amount']-  PrevFunction[nameofAccount]["Amount"] < 0){
     
     action = action.includes("BUY") ? "SELL" : "BUY";
     amount = -amount ;
@@ -92,8 +96,8 @@ const FuctionForTrade=(order, nameofAccount)=>{
   console.log("ord ", ordr);
   fs.writeFileSync(path,ordr);
 
-  PrevFunction['action'] = Currentvalues['action']
-  PrevFunction['Amount'] = Currentvalues['Amount']
+  PrevFunction[nameofAccount]['action'] = Currentvalues['action']
+  PrevFunction[nameofAccount]['Amount'] = Currentvalues['Amount']
 
   return null;
 }
