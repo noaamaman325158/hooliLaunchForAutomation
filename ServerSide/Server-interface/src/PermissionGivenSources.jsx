@@ -17,7 +17,7 @@ const DataTable = () => {
     socket.on('SendAllData', (AllData) => {
       setSource(AllData.source);
 
-      console.log("All data ",AllData )
+      //console.log("All data ",AllData )
     });
     
   }, []);

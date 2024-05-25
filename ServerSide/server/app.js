@@ -1,7 +1,6 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const fs = require('fs'); // Corrected: using fs.promises
-const fsp = fs.promises;
 const cors = require("cors");
 const os = require('os');
 const { v4: uuidv4 } = require('uuid');
@@ -9,14 +8,15 @@ const {  checkMacAddressExists } = require('./mongoDBService.js');
 const app = express();
 const PORT = 2666;
 const io = require('socket.io')(PORT);
-
-
+require('log-timestamp');
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+
 LOCAL_MEMORY={
+"couter":0,
 "source": "Sim101",
   "destinations": [
     "Sim102"
@@ -42,90 +42,43 @@ socket.on('UpdateSource', (value) => {
   console.log("UpdateSource", value)
 });
 
-socket.on('counter clicked', () => {
-  console.log("counter clicked")
-});
 
-
-
-});
-
-const returnAction = (data) => {  
-return data.includes('LONG') ? 'BUY': 'SELL';
-};
-
-const returnAmount = (data) => {
-return data.split(';')[1];
-};
-
-const returnCurrentValues = (data) => {
-valuedictionary = {
-  'action': returnAction(data),
-  'Amount': returnAmount(data)
-};
-return valuedictionary;
-};
-
-
-let Currentvalues = {};
-let PrevFunction = {
-      'action': null,
-      'Amount': 0
-  };
+var fsTimeout
+console.log("------------------rock and roll baby")
+console.log("num of clients: ",Object.keys(io.sockets.connected).length,Object.keys(io.sockets.connected))
+  fs.watch(SettingsPath,(event, filename)=>{
+    fs.readFile(SettingsPath, 'utf8', (err, data) => {
     
-var buyofsell = (nameofAccount)=>{
-  fs.readFile(SettingsPath.replace(settings.source, nameofAccount), 'utf8', (err, OldFileData) => {
-      if (err) {
-        console.error(err);
-        return;
-      }
-      
-      PrevFunction["action"] = OldFileData.includes('LONG') ? 'BUY': 'SELL';
-      PrevFunction["Amount"] = OldFileData.split(';')[1];
-     // console.log("new sim data ",OldFileData, PrevFunction)
-  });
-  fs.readFile(SettingsPath, 'utf8', (err, data) => {
- 
-  Currentvalues= returnCurrentValues(data);
-  //console.log("data ",data, Currentvalues, PrevFunction)
-  if (!PrevFunction["Amount"]){
-      PrevFunction["Amount"]=0;
+    if (!fsTimeout) {
+      console.log("emit " , data)
+     
+      io.sockets.emit("NewTrade", data)
+      fsTimeout = setTimeout(function() { fsTimeout=null }, 2000) // give 5 seconds for multiple events
+  }else{
+    console.log("not ok")
   }
-  var action= Currentvalues["action"];
-  var amount= Currentvalues["Amount"]-  PrevFunction["Amount"];
 
-  if (Currentvalues["Amount"]-  PrevFunction["Amount"] < 0){
-    console.log("inside if statement ", Currentvalues["Amount"]-  PrevFunction["Amount"]);
-    action = action.includes("SELL") ? "BUY" : "SELL";
-    //action=data.includes("LONG") ? "BUY": "SELL";
-    amount = -amount ;
-  }
-  console.log("account name- ",nameofAccount, "action -", action, " amount- ",amount, "prev was -", PrevFunction, " current- ", Currentvalues)
-  const path =  "C:\\Users\\Administrator\\Documents\\NinjaTrader 8\\incoming\\oif." +  uuidv4() + ".txt";
-  const mrkt = "PLACE;"+nameofAccount+";<INS>;<ACT>;<QTY>;MARKET;<LIMIT>;;DAY;;;;";
-  var ordr = mrkt.replace("<INS>","NQ 06-24").replace("<ACT>",action).replace("<QTY>",amount);
-  if( data.includes("FLAT")){
-     ordr = "CLOSEPOSITION;<ACCOUNT>;<INSTRUMENT>;;;;;;;;;;".replace("<ACCOUNT>",nameofAccount).replace("<INSTRUMENT>","NQ 06-24");
-  }
-  fs.writeFileSync(path,ordr);
-  //console.log("finally ", path,ordr)
+    //socket.emit("NewTrade", data)
+    //console.log("emit " , data, d- dateTime)
+    // if ( d- dateTime > 2500){
+    //   console.log("emit " , data, d- dateTime)
+    //   socket.emit("NewTrade", data)
+    // }else{
+    //   console.log("cant " , d- dateTime)
+    // }
+
+    
+    
+    })
+     
+  });  
 });
 
-};
+
+
 fs.writeFile(SettingsPath, "", function (err) {
   if (err) throw err;
   console.log("It's saved!");
 });
 
-fs.watch(SettingsPath,(event,filename)=>{
-  socket.emit("NewTrade", LOCAL_MEMORY)
-  // count++;
-  //   if(count%2==0){
-  //       for(var key in LOCAL_MEMORY.destinations ){
-  //         console.log("Copy same trade to -",LOCAL_MEMORY.destinations[key] )
-          
-  //       }
-  //   };
-    
-});
 
