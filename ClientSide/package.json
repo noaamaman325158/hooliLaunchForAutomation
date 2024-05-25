@@ -12,7 +12,8 @@
     "heroku-postbuild": "cd src/client && npm install && npm run build"
   },
   "dependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "express": "^4.19.2"
   },
   "engines": {
     "node": ">=12.16.1",

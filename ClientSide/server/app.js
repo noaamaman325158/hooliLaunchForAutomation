@@ -68,18 +68,27 @@ let PrevFunction = {
   "Sim101":{
     'action': "FLAT",
     'Amount': 0
-}};
+  }
+};
 
+var dateOfLastTrade=new Date();
 const FuctionForTrade=(order, nameofAccount)=>{
+  var newDate= new Date();
+
+  if(newDate - dateOfLastTrade< 2000)
+    {
+      console.log("stopppppppppppppppppppppppppppppp")
+      return
+    }
   
   Currentvalues['action'] =returnAction(order)
   Currentvalues['Amount'] = returnAmount(order)
   console.log("--> ",PrevFunction, Currentvalues)
 
   var action= Currentvalues["action"];
-  var amount= Currentvalues['Amount']-  PrevFunction[nameofAccount]['Amount'];
+  var amount= parseInt(Currentvalues['Amount'])-  PrevFunction[nameofAccount]['Amount'];
 
-  if (Currentvalues['Amount']-  PrevFunction[nameofAccount]["Amount"] < 0){
+  if (parseInt(Currentvalues['Amount']) - PrevFunction[nameofAccount]["Amount"] < 0){
     
     action = action.includes("BUY") ? "SELL" : "BUY";
     amount = -amount ;
@@ -91,14 +100,14 @@ const FuctionForTrade=(order, nameofAccount)=>{
   if( Currentvalues['action'].includes("FLAT")){
      ordr = "CLOSEPOSITION;<ACCOUNT>;<INSTRUMENT>;;;;;;;;;;".replace("<ACCOUNT>",nameofAccount).replace("<INSTRUMENT>","NQ 06-24");
   }
-  console.log("amount ", amount)
-  console.log("path ", path);
-  console.log("ord ", ordr);
+  //console.log("amount ", amount)
+ // console.log("path ", path);
+ // console.log("ord ", ordr);
   fs.writeFileSync(path,ordr);
-
   PrevFunction[nameofAccount]['action'] = Currentvalues['action']
-  PrevFunction[nameofAccount]['Amount'] = Currentvalues['Amount']
+  PrevFunction[nameofAccount]['Amount'] = parseInt(Currentvalues['Amount'])
 
+  dateOfLastTrade= newDate;
   return null;
 }
 
