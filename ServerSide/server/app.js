@@ -6,7 +6,7 @@ const os = require('os');
 const { v4: uuidv4 } = require('uuid');
 const { checkMacAddressExists } = require('./mongoDBService.js');
 const app = express();
-const PORT = 2666;
+const PORT = 3001;
 const io = require('socket.io')(PORT);
 require('log-timestamp');
 app.use(express.json());
