@@ -1,40 +1,37 @@
 const { app, BrowserWindow } = require('electron');
-const { spawn } = require('child_process');
-const path = require('path');
-const url = require('url');
+const server = require('./server/app.js');
 
-function createMainWindow() {
-  const mainWindow = new BrowserWindow({
-    title: 'Client-Side-Trading',
-    width: 1000,
+const path = require('path');
+
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 800,
     height: 600,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
-    }
+      contextIsolation: true,
+      enableRemoteModule: false,
+      disableBlinkFeatures: 'Autofill', 
+    },
   });
-
-  mainWindow.webContents.openDevTools();
-
-  const startUrl = url.format({
-    pathname: path.join(__dirname, 'client interface', 'build', 'index.html'),
-    protocol: 'file:',
-    slashes: true
-  });
-  
-
-  mainWindow.loadURL(startUrl).catch(e => {
-    console.error('Failed to load URL:', e);
-  });
-
-  // Start the server as a separate process
-  const server = spawn('node', [path.join(__dirname, 'client', 'client.js')]);
-  server.stdout.on('data', data => {
-    console.log(`Server: ${data}`);
-  });
-  server.stderr.on('data', data => {
-    console.error(`Server Error: ${data}`);
-  });
+  console.log(path.join(__dirname, 'client', 'build', 'index.html'))
+  win.loadURL(`file://${path.join(__dirname, 'client', 'build', 'index.html')}`);
 }
+app.disableHardwareAcceleration();
+app.whenReady().then(createWindow);
 
-app.whenReady().then(createMainWindow);
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});
+
+pp.whenReady().then(() => {
+  server.start(); // Start your Node.js backend server
+  createWindow();
+});
