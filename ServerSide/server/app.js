@@ -1,6 +1,6 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
-const fs = require('fs'); // Corrected: using fs.promises
+const fs = require('fs'); 
 const cors = require("cors");
 const os = require('os');
 const { v4: uuidv4 } = require('uuid');
@@ -14,20 +14,7 @@ app.use(cors());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-// Middleware to block localhost connections
-io.use((socket, next) => {
-    const clientIp = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
-    if (clientIp === '127.0.0.1' || clientIp === '::ffff:127.0.0.1') {
-        console.log('Connection from localhost is denied.');
-        return next(new Error('Connection from localhost is not allowed.'));
-    }
-    next();
-});
-
-// Initialize a map to keep track of connected clients
-const connectedClients = new Map();
-
-LOCAL_MEMORY = {
+const LOCAL_MEMORY = {
     "couter": 0,
     "source": "Sim101",
     "destinations": [
@@ -41,24 +28,24 @@ LOCAL_MEMORY = {
 }
 const SettingsPath = `${LOCAL_MEMORY.ComputerWindowsPAth}NQ 06-24 Globex_${LOCAL_MEMORY.source}_position.txt`;
 
+let currentSocket = null; 
+
 io.on('connection', (socket) => {
     console.log('Client connected');
-    // Assign a unique identifier to each client
-    const clientId = uuidv4();
-    connectedClients.set(clientId, {
-        socketId: socket.id,
-        ip: socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress,
-        userAgent: socket.request.headers['user-agent']
-    });
-    console.log(`Client ${clientId} connected with socket ID: ${socket.id}, IP: ${socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress}, User-Agent: ${socket.request.headers['user-agent']}`);
 
-    socket.emit("SendAllData", LOCAL_MEMORY)
+    if (currentSocket) {
+        console.log('Disconnecting previous client');
+        currentSocket.disconnect(true);
+    }
 
+    socket.emit("SendAllData", LOCAL_MEMORY);
+
+    currentSocket = socket; 
+
+    
     socket.on('disconnect', () => {
         console.log('Client disconnected');
-        // Remove the client from the connectedClients map when disconnected
-        connectedClients.delete(clientId);
-        console.log(`Client ${clientId} disconnected`);
+        currentSocket = null; 
     });
 
     socket.error('error', (err) => {
@@ -67,25 +54,23 @@ io.on('connection', (socket) => {
 
     socket.on('UpdateSource', (value) => {
         LOCAL_MEMORY.source = value;
-        console.log("UpdateSource", value)
+        console.log("UpdateSource", value);
     });
 
-    // Log the actual number of connected clients
-    console.log("Number of connected clients:", io.engine.clientsCount);
 
-    var fsTimeout
-    console.log("------------------rock and roll baby")
-    console.log("num of clients: ", Object.keys(io.sockets.connected).length, Object.keys(io.sockets.connected))
+    var fsTimeout;
+    console.log("------------------rock and roll baby");
+    console.log("num of clients: ", Object.keys(io.sockets.connected).length, Object.keys(io.sockets.connected));
     fs.watch(SettingsPath, (event, filename) => {
         fs.readFile(SettingsPath, 'utf8', (err, data) => {
             if (!fsTimeout) {
-                console.log("emit ", data)
-                io.sockets.emit("NewTrade", data)
-                fsTimeout = setTimeout(function () { fsTimeout = null }, 800000000) // give 5 seconds for multiple events
+                console.log("emit ", data);
+                io.sockets.emit("NewTrade", data);
+                fsTimeout = setTimeout(function () { fsTimeout = null }, 800000000);
             } else {
-                console.log("not ok")
+                console.log("not ok");
             }
-        })
+        });
     });
 });
 
