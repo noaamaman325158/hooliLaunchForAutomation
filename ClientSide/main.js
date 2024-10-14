@@ -1,7 +1,13 @@
 const { app, BrowserWindow } = require('electron');
 const server = require('./server/app.js');
-
 const path = require('path');
+
+app.commandLine.appendSwitch('no-sandbox');
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch('disable-software-rasterizer');
+app.commandLine.appendSwitch('disable-features', 'MediaSource,MediaCapabilities,WebRTC');
+app.commandLine.appendSwitch('disable-component-update');
+
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -10,14 +16,26 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       enableRemoteModule: false,
-      disableBlinkFeatures: 'Autofill', 
+      disableBlinkFeatures: 'Autofill',
+      webSecurity: true,
+      sandbox: true,
+      plugins: false,
+      nativeWindowOpen: true,
     },
   });
-  console.log(path.join(__dirname, 'client', 'build', 'index.html'))
+
+  console.log(path.join(__dirname, 'client', 'build', 'index.html'));
   win.loadURL(`file://${path.join(__dirname, 'client', 'build', 'index.html')}`);
 }
+
 app.disableHardwareAcceleration();
-app.whenReady().then(createWindow);
+app.commandLine.appendSwitch('disable-features', 'MediaSource,MediaCapabilities');
+app.commandLine.appendSwitch('disable-component-update');
+
+app.whenReady().then(() => {
+  server.start(); // Start your Node.js backend server
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -29,9 +47,4 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
-});
-
-pp.whenReady().then(() => {
-  server.start(); // Start your Node.js backend server
-  createWindow();
 });

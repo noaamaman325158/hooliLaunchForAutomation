@@ -23,7 +23,7 @@ function App() {
   useEffect(() => {
     // connect to the socket server
     socket = io("ws://127.0.0.1:2222");
-    socketRemoteServer = io('ws://185.241.5.114:2666');
+    socketRemoteServer = io('ws://127.0.0.1:2666');
     
     socketRemoteServer.on('NewTrade', (data) => {
       count++;

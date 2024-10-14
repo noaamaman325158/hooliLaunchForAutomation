@@ -35,7 +35,6 @@ io.on('connection', (socket) => {
 
     if (currentSocket) {
         console.log('Disconnecting previous client');
-        currentSocket.disconnect(true);
     }
 
     socket.emit("SendAllData", LOCAL_MEMORY);
