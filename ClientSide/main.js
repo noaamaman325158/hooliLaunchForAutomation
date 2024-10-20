@@ -33,7 +33,7 @@ app.commandLine.appendSwitch('disable-features', 'MediaSource,MediaCapabilities'
 app.commandLine.appendSwitch('disable-component-update');
 
 app.whenReady().then(() => {
-  server.start(); // Start your Node.js backend server
+  server.start();
   createWindow();
 });
 

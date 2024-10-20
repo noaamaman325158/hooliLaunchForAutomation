@@ -14,7 +14,7 @@ function createMainWindow() {
     }
   });
 
-  mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools({mode: 'detach'});
 
   const startUrl = url.format({
     pathname: path.join(__dirname, 'server_interface', 'build', 'index.html'),
@@ -27,7 +27,7 @@ function createMainWindow() {
   });
 
   // Start the server as a separate process
-  const server = spawn('node', [path.join(__dirname, 'server', 'server.js')]);
+  const server = spawn('node', [path.join(__dirname, 'server', 'app.js')]);
   server.stdout.on('data', data => {
     console.log(`Server: ${data}`);
   });

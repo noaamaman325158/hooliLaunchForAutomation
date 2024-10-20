@@ -1,4 +1,3 @@
-// app.js
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
@@ -6,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const fs = require("fs");
 const os = require("os");
 const { v4: uuidv4 } = require("uuid");
+const cors = require("cors");
 const { checkMacAddressExists } = require("./mongoDBService.js");
 
 const app = express();
@@ -17,6 +17,11 @@ const io = socketIo(server); // Attach socket.io to the server
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
+// Middleware for logging each request
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+  next();
+});
 
 const LOCAL_MEMORY = {
   destinations: ["Sim102"],
@@ -24,19 +29,35 @@ const LOCAL_MEMORY = {
   allowed_clients: [],
   clients_connected: [],
   client_destinations: [],
-  ComputerWindowsPath:
-      `C:\\Users\\${os.userInfo().username}\\Documents\\NinjaTrader 8\\outgoing\\`,
+  ComputerWindowsPath: `C:\\Users\\${os.userInfo().username}\\Documents\\NinjaTrader 8\\outgoing\\`,
 };
 
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+// Enhanced Error Handling for Socket Events
 io.on("connection", (socket) => {
   console.log("Client connected:", LOCAL_MEMORY.destinations);
-  socket.emit("SendAllData", LOCAL_MEMORY);
+
+  try {
+    socket.emit("SendAllData", LOCAL_MEMORY);
+  } catch (error) {
+    console.error("Error sending data to client:", error);
+  }
 
   socket.on("disconnect", () => {
     console.log("Client disconnected");
   });
 
   socket.on("DeleteDestination", (value) => {
+    if (!value) {
+      console.error("DeleteDestination received invalid value:", value);
+      return;
+    }
     console.log("Server DeleteDestination:", value);
     LOCAL_MEMORY.destinations = LOCAL_MEMORY.destinations.filter(
         (item) => item !== value
@@ -45,11 +66,21 @@ io.on("connection", (socket) => {
   });
 
   socket.on("AddDestination", (value) => {
+    if (!value) {
+      console.error("AddDestination received invalid value:", value);
+      return;
+    }
     LOCAL_MEMORY.destinations.push(value);
     console.log("Server AddDestination:", LOCAL_MEMORY.destinations);
   });
 
+  // Input validation and error handling for TradeNow
   socket.on("TradeNow", (data) => {
+    if (!isValidTradeData(data)) {
+      console.error("Invalid trade data:", data);
+      return;
+    }
+
     console.log("TradeNow:", data, new Date());
     LOCAL_MEMORY.destinations.forEach((destination) => {
       console.log("Copy same trade to:", destination);
@@ -58,6 +89,11 @@ io.on("connection", (socket) => {
     console.log("Finish Trade");
   });
 });
+
+function isValidTradeData(data) {
+  // Validate that trade data follows the expected format
+  return typeof data === "string" && data.split(";").length === 2;
+}
 
 let CurrentValues = {};
 const PrevFunction = {
@@ -87,8 +123,7 @@ function executeTrade(order, account) {
     amount = -amount;
   }
 
-  const filePath =
-      `C:\\Users\\${os.userInfo().username}\\Documents\\NinjaTrader 8\\incoming\\oif.${uuidv4()}.txt`;
+  const filePath = `C:\\Users\\${os.userInfo().username}\\Documents\\NinjaTrader 8\\incoming\\oif.${uuidv4()}.txt`;
   const marketOrder = `PLACE;${account};NQ 09-24;${action};${amount};MARKET;;DAY;;;;`;
 
   let orderCommand = CurrentValues["action"].includes("FLAT")
@@ -113,6 +148,18 @@ function parseAction(data) {
 function parseAmount(data) {
   return data.split(";")[1];
 }
+
+// Graceful Shutdown of Server
+function handleShutdown() {
+  console.log("Shutting down server...");
+  server.close(() => {
+    console.log("Server closed.");
+    process.exit(0);
+  });
+}
+
+process.on('SIGINT', handleShutdown);  // On Ctrl+C
+process.on('SIGTERM', handleShutdown); // On kill command
 
 function start() {
   server.listen(PORT, () => {
