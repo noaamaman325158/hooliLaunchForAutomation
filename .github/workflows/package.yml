@@ -1,0 +1,40 @@
+name: Electron App Packaging
+
+on:
+  push:
+    paths:
+      - 'ClientSide/**'   
+  pull_request:
+    paths:
+      - 'ClientSide/**'   
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16' 
+
+    - name: Install dependencies
+      working-directory: ./ClientSide
+      run: npm install
+
+    - name: Build Electron App
+      working-directory: ./ClientSide
+      run: npm run build
+
+    - name: Package Electron App
+      working-directory: ./ClientSide
+      run: npm run package-win  
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: electron-build
+        path: ./ClientSide/dist/ 
