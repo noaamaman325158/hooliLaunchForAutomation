@@ -1,5 +1,5 @@
 const { app, BrowserWindow } = require('electron');
-const server = require('./server/app.js');
+const { start } = require('./server/app.js'); // Corrected import
 const path = require('path');
 
 app.commandLine.appendSwitch('no-sandbox');
@@ -33,7 +33,7 @@ app.commandLine.appendSwitch('disable-features', 'MediaSource,MediaCapabilities'
 app.commandLine.appendSwitch('disable-component-update');
 
 app.whenReady().then(() => {
-  server.start();
+  start();
   createWindow();
 });
 
