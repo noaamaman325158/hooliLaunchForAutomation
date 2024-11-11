@@ -1,5 +1,4 @@
 const { app, BrowserWindow } = require('electron');
-const { start } = require('./server/app.js'); // Local backend script
 const path = require('path');
 const os = require('os');
 
@@ -26,43 +25,43 @@ app.commandLine.appendSwitch('disable-features', 'MediaSource,MediaCapabilities,
 app.commandLine.appendSwitch('disable-component-update');
 
 // Set the backend URL dynamically, allowing for an external backend
-const backendURL = process.env.BACKEND_URL || 'http://localhost:2222'; // Change this as needed
+const backendURL = 'http://localhost:2222'; // Change this as needed
 
 function createWindow() {
-  const win = new BrowserWindow({
-    width: 800,
-    height: 600,
-    webPreferences: {
-      contextIsolation: true,
-      enableRemoteModule: false,
-      disableBlinkFeatures: 'Autofill',
-      webSecurity: true,
-      sandbox: false,
-      plugins: false,
-      nativeWindowOpen: true,
-    },
-    show: false, // Don’t show until content is loaded
-  });
+    const win = new BrowserWindow({
+        width: 800,
+        height: 600,
+        webPreferences: {
+            contextIsolation: true,
+            enableRemoteModule: false,
+            disableBlinkFeatures: 'Autofill',
+            webSecurity: true,
+            sandbox: false,
+            plugins: false,
+            nativeWindowOpen: true,
+        },
+        show: false, // Don’t show until content is loaded
+    });
 
-  const indexPath = path.join(__dirname, 'client', 'build', 'index.html');
-  console.log('Attempting to load from:', indexPath);
+    const indexPath = path.join(__dirname, 'build', 'index.html');
+    console.log('Attempting to load from:', indexPath);
 
-  win.loadURL(`file://${indexPath}`)
-      .then(() => {
-        console.log('Content loaded successfully');
-        win.show();
-      })
-      .catch((error) => {
-        console.error('Failed to load from file:', error);
-        // Load from the backend URL if file loading fails
-        win.loadURL(backendURL)
-            .then(() => {
-              console.log('Content loaded from server successfully');
-              win.show();
-            })
-            .catch((serverError) => {
-              console.error('Failed to load from server:', serverError);
-              win.loadURL(`data:text/html,
+    win.loadURL(`file://${indexPath}`)
+        .then(() => {
+            console.log('Content loaded successfully');
+            win.show();
+        })
+        .catch((error) => {
+            console.error('Failed to load from file:', error);
+            // Load from the backend URL if file loading fails
+            win.loadURL(backendURL)
+                .then(() => {
+                    console.log('Content loaded from server successfully');
+                    win.show();
+                })
+                .catch((serverError) => {
+                    console.error('Failed to load from server:', serverError);
+                    win.loadURL(`data:text/html,
             <html>
               <head>
                 <title>Error</title>
@@ -80,50 +79,39 @@ function createWindow() {
               </body>
             </html>
           `);
-              win.show();
-            });
-      });
+                    win.show();
+                });
+        });
 
-  return win;
+    return win;
 }
 
 let mainWindow = null;
 
 async function initialize() {
-  if (!process.env.BACKEND_URL) {
-    try {
-      console.log('Starting local server...');
-      await start();
-      console.log('Local server started successfully');
-    } catch (error) {
-      console.error('Local server failed to start:', error);
-      app.quit();
-      return;
-    }
-  }
-  mainWindow = createWindow();
+    mainWindow = createWindow();
 }
 
 // App lifecycle
 app.whenReady().then(initialize);
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
 });
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    initialize();
-  }
+    if (BrowserWindow.getAllWindows().length === 0) {
+        initialize();
+    }
 });
 
 // Handle crashes and errors
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught exception:', error);
-  if (mainWindow) {
-    mainWindow.loadURL(`data:text/html,
+    console.error('Uncaught exception:', error);
+    if (mainWindow) {
+        mainWindow.loadURL(`data:text/html,
       <html>
         <head>
           <title>Error</title>
@@ -138,9 +126,9 @@ process.on('uncaughtException', (error) => {
         </body>
       </html>
     `);
-  }
+    }
 });
 
 process.on('unhandledRejection', (reason) => {
-  console.error('Unhandled rejection:', reason);
+    console.error('Unhandled rejection:', reason);
 });

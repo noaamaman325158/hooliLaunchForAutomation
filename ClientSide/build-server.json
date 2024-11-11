@@ -1,0 +1,22 @@
+{
+  "appId": "com.example.serverapp",
+  "productName": "MyServerApp",
+  "files": [
+    "**/*",
+    "!node_modules/ffmpeg-static/**",
+    "!**/*.dll"
+  ],
+  "asar": true,
+  "win": {
+    "target": "nsis",
+    "icon": "assets/icon.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": true,
+    "allowElevation": true,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true
+  }
+}
