@@ -1,40 +1,46 @@
-# name: Electron App Packaging
+name: Electron App Packaging
 
-# on:
-#   push:
-#     paths:
-#       - 'ClientSide/**'   
-#   pull_request:
-#     paths:
-#       - 'ClientSide/**'   
+on:
+  push:
+    paths:
+      - 'ClientSide/**'   
+  pull_request:
+    paths:
+      - 'ClientSide/**'   
 
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-#     steps:
-#     - name: Checkout Repository
-#       uses: actions/checkout@v3
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-#     - name: Set up Node.js
-#       uses: actions/setup-node@v3
-#       with:
-#         node-version: '16' 
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16' 
 
-#     - name: Install dependencies
-#       working-directory: ./ClientSide
-#       run: npm install
+    - name: Install dependencies
+      working-directory: ./ClientSide
+      run: npm install
 
-#     - name: Build Electron App
-#       working-directory: ./ClientSide
-#       run: npm run build
+    - name: Build currrent frontend
+      working-directory: ./ClientSide/client
+      run: npm run build
 
-#     - name: Package Electron App
-#       working-directory: ./ClientSide
-#       run: npm run package-win  
-
-#     - name: Upload Artifacts
-#       uses: actions/upload-artifact@v3
-#       with:
-#         name: electron-build
-#         path: ./ClientSide/dist/ 
+    - name: Build Client Electron App
+      working-directory: ./ClientSide
+      run: npm run buid-win
+      
+    - name: Install server dependencies
+      working-directory: ./ClientSide/server
+      run: npm install
+      
+    - name: Build EXE for the backend side
+      working-directory: ./ClientSide/server
+      run: pkg .
+    
+    - name: combine two exe for single application
+      working-directory: ./combines-app
+      run: npm run dist
