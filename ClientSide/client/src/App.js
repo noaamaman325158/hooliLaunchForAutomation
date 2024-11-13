@@ -1,38 +1,69 @@
-// Import necessary modules
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
-import './App.css';
 
-let socket;
+let socket = null;
+let socketRemoteServer = null;
 
 function App() {
+  let count = 0;
+
   const [destination, setDestination] = useState("");
   const [allDestinations, setAllDestinationsData] = useState([]);
-  const [isConnected, setIsConnected] = useState(false);  // Track connection status
+  const [localConnectionStatus, setLocalConnectionStatus] = useState(false);
+  const [remoteConnectionStatus, setRemoteConnectionStatus] = useState(false);
+  const [isConnected, setIsConnected] = useState(false); // Track overall connection status
 
   useEffect(() => {
-    // Connect to the backend WebSocket server
+    // Connect to the local socket server
     socket = io("ws://127.0.0.1:2222");
+    socket.on('connect', () => {
+      setLocalConnectionStatus(true);
+      updateConnectionStatus();
+    });
+    socket.on('disconnect', () => {
+      setLocalConnectionStatus(false);
+      updateConnectionStatus();
+    });
 
-    socket.on('connect', () => setIsConnected(true));  // Show connected
-    socket.on('disconnect', () => setIsConnected(false)); // Show disconnected
+    // Connect to the remote socket server
+    socketRemoteServer = io('ws://83.229.81.169:2666');
+    socketRemoteServer.on('connect', () => {
+      setRemoteConnectionStatus(true);
+      updateConnectionStatus();
+    });
+    socketRemoteServer.on('disconnect', () => {
+      setRemoteConnectionStatus(false);
+      updateConnectionStatus();
+    });
 
-    // Listen for data from backend
+    socketRemoteServer.on('NewTrade', (data) => {
+      console.log("NewTrade", data);
+      socket.emit('TradeNow', data);
+    });
+
     socket.on('SendAllData', (AllData) => {
       setAllDestinationsData(AllData.destinations);
       setDestination(AllData.destinations[0]);
     });
 
-    // Cleanup on component unmount
-    return () => socket.disconnect();
+    // Clean up connections on component unmount
+    return () => {
+      socket.disconnect();
+      socketRemoteServer.disconnect();
+    };
   }, []);
 
-  const handleAddAccount = () => {
+  // Update overall connection status
+  const updateConnectionStatus = () => {
+    setIsConnected(socket.connected && socketRemoteServer.connected);
+  };
+
+  const handleAddAccount = async () => {
     setAllDestinationsData([...allDestinations, destination]);
     socket.emit('AddDestination', destination);
   }
 
-  const handleDeleteAccount = (row) => {
+  const handleDeleteAccount = async (row) => {
     const newArray = allDestinations.filter((item) => item !== row);
     setAllDestinationsData(newArray);
     socket.emit('DeleteDestination', row);
@@ -40,14 +71,17 @@ function App() {
 
   return (
       <div className="table-container">
-        <div className="connection-status-wrapper">
-          {/* Connection status */}
-          <div className="connection-status" style={{ backgroundColor: isConnected ? 'green' : 'red' }} />
-          <span className="connection-text">
-          {isConnected ? 'Connected' : 'Disconnected'}
-        </span>
-        </div>
         <h1>Client Interface - put our destinations</h1>
+
+        {/* Connection Status Indicators */}
+        <div className="connection-status">
+          <span>Local Server: </span>
+          <button style={{ backgroundColor: localConnectionStatus ? 'green' : 'red' }} />
+          <span>Remote Server: </span>
+          <button style={{ backgroundColor: remoteConnectionStatus ? 'green' : 'red' }} />
+          <span>Overall Connection Status: </span>
+          <button style={{ backgroundColor: isConnected ? 'green' : 'red' }} />
+        </div>
 
         <table className="table">
           <thead>
@@ -60,7 +94,9 @@ function App() {
           {allDestinations.map(row => (
               <tr key={row}>
                 <td>{row}</td>
-                <td><button onClick={() => handleDeleteAccount(row)}>Delete</button></td>
+                <td>
+                  <button onClick={() => handleDeleteAccount(row)}>Delete</button>
+                </td>
               </tr>
           ))}
           </tbody>

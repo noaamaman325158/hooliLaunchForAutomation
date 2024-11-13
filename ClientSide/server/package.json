@@ -19,20 +19,19 @@
     "electron-builder": "^25.1.8",
     "nodemon": "^2.0.4"
   },
-  "build": {
-    "appId": "com.noaa.hooliLaunch",
-    "productName": "back",
-    "directories": {
-      "buildResources": "assets",
-      "output": "dist"
-    },
-    "win": {
-      "target": "nsis"
-    },
-    "files": [
-      "**/*",
-      "!node_modules/{dev-only-package}"
+  "pkg": {
+    "scripts": [
+      "app.js"
+    ],
+    "assets": [
+      "views/**/*",
+      "public/**/*"
+    ],
+    "targets": [
+      "node18-win-x64",
+      "node18-linux-x64",
+      "node18-macos-x64"
     ]
-  }
-
+  },
+  "bin": "app.js"
 }

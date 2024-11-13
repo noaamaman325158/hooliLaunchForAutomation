@@ -1,170 +1,209 @@
 const express = require("express");
-const http = require("http");
-const socketIo = require("socket.io");
 const cookieParser = require("cookie-parser");
-const fs = require("fs");
-const os = require("os");
-const { v4: uuidv4 } = require("uuid");
+const fs = require('fs'); // Corrected: using fs.promises
+const fsp = fs.promises;
 const cors = require("cors");
-const { checkMacAddressExists } = require("./mongoDBService.js");
-
+const os = require('os');
+const { v4: uuidv4 } = require('uuid');
+const {  checkMacAddressExists } = require('./mongoDBService.js');
 const app = express();
 const PORT = 2222;
+const io = require('socket.io')(PORT);
 
-const server = http.createServer(app); // Create HTTP server
-const io = socketIo(server); // Attach socket.io to the server
 
 app.use(express.json());
-app.use(cookieParser());
+app.use(cors());
 app.use(express.urlencoded({ extended: false }));
-// Middleware for logging each request
-app.use((req, res, next) => {
-  console.log(`Incoming request: ${req.method} ${req.url}`);
-  next();
-});
+app.use(cookieParser());
 
-const LOCAL_MEMORY = {
-  destinations: ["Sim102"],
-  server_ip: "83.229.81.169",
-  allowed_clients: [],
-  clients_connected: [],
-  client_destinations: [],
-  ComputerWindowsPath: `C:\\Users\\${os.userInfo().username}\\Documents\\NinjaTrader 8\\outgoing\\`,
-};
+LOCAL_MEMORY={
+  "destinations": [
+    "Sim102",
+  ],
+  "server_ip": "185.241.5.114",
+  "allowed_clients": [],
 
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+  "clients_connected": [],
+  "client_destinations": [
+  ],
+  "ComputerWindowsPAth": "C:\\Users\\"+os.userInfo().username+"\\Documents\\NinjaTrader 8\\outgoing\\",
+}
 
-// Enhanced Error Handling for Socket Events
-io.on("connection", (socket) => {
-  console.log("Client connected:", LOCAL_MEMORY.destinations);
+const SettingsPath = `${LOCAL_MEMORY.ComputerWindowsPAth}NQ 12-24 Globex_${LOCAL_MEMORY.source}_position.txt`;
 
-  try {
-    socket.emit("SendAllData", LOCAL_MEMORY);
-  } catch (error) {
-    console.error("Error sending data to client:", error);
-  }
+io.on('connection', (socket) => {
+  console.log('Client connected -CLIENT SERVER SIDE',LOCAL_MEMORY.destinations, socket.handshake.headers.host );
+  socket.emit("SendAllData", LOCAL_MEMORY)
 
-  socket.on("disconnect", () => {
-    console.log("Client disconnected");
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
   });
 
-  socket.on("DeleteDestination", (value) => {
-    if (!value) {
-      console.error("DeleteDestination received invalid value:", value);
-      return;
-    }
-    console.log("Server DeleteDestination:", value);
-    LOCAL_MEMORY.destinations = LOCAL_MEMORY.destinations.filter(
-        (item) => item !== value
-    );
-    console.log("Updated Local Memory:", LOCAL_MEMORY);
+  socket.on('DeleteDestination', (value) => {
+    console.log('Server DeleteDestination', value);
+    LOCAL_MEMORY.destinations = LOCAL_MEMORY.destinations.filter(item => item !== value);
+    console.log("new Local memory", LOCAL_MEMORY)
   });
-
-  socket.on("AddDestination", (value) => {
-    if (!value) {
-      console.error("AddDestination received invalid value:", value);
-      return;
-    }
+  socket.on('AddDestination', (value) => {
     LOCAL_MEMORY.destinations.push(value);
-    console.log("Server AddDestination:", LOCAL_MEMORY.destinations);
+    console.log('Server UpdateDestination', LOCAL_MEMORY.destinations);
   });
 
-  // Input validation and error handling for TradeNow
-  socket.on("TradeNow", (data) => {
-    if (!isValidTradeData(data)) {
-      console.error("Invalid trade data:", data);
-      return;
+  socket.on('TradeNow', (data) => {
+    console.log('TradeNow', data["d"], data["INS"], new Date(), Currentvalues);
+    for(var key in LOCAL_MEMORY.destinations ){
+      console.log("Copy same trade to -",LOCAL_MEMORY.destinations[key] )
+      FuctionForTrade(data["d"], LOCAL_MEMORY.destinations[key], data["INS"])
     }
-
-    console.log("TradeNow:", data, new Date());
-    LOCAL_MEMORY.destinations.forEach((destination) => {
-      console.log("Copy same trade to:", destination);
-      executeTrade(data, destination);
-    });
-    console.log("Finish Trade");
+    console.log('Finish Trade', PrevFunction, Currentvalues);
+    console.log('------------------------------------------------------------');
   });
 });
 
-function isValidTradeData(data) {
-  // Validate that trade data follows the expected format
-  return typeof data === "string" && data.split(";").length === 2;
-}
 
-let CurrentValues = {};
-const PrevFunction = {
-  Sim102: { action: "FLAT", Amount: 0 },
-  Sim101: { action: "FLAT", Amount: 0 },
+let Currentvalues = {};
+var dateOfLastTrade=new Date();
+let PrevFunction = {
+  "MNQ 12-24":{
+
+    "Sim102":{
+      'action': "FLAT",
+      'Amount': 0
+    },
+    "Sim103":{
+      'action': "FLAT",
+      'Amount': 0
+    },
+  },
+  "NQ 12-24":{
+
+    "Sim102":{
+      'action': "FLAT",
+      'Amount': 0
+    },
+    "Sim103":{
+      'action': "FLAT",
+      'Amount': 0
+    },
+  },
+  "MES 12-24":{
+    "APEX-36565-26":{
+      'action': "FLAT",
+      'Amount': 0
+    },
+
+    "Sim102":{
+      'action': "FLAT",
+      'Amount': 0
+    },
+    "Sim103":{
+      'action': "FLAT",
+      'Amount': 0
+    },
+    "Sim104":{
+      'action': "FLAT",
+      'Amount': 0
+    },
+  },
+  "ES 12-24":{
+    "Sim102":{
+      'action': "FLAT",
+      'Amount': 0
+    },
+    "Sim103":{
+      'action': "FLAT",
+      'Amount': 0
+    },
+    "Sim104":{
+      'action': "FLAT",
+      'Amount': 0
+    },
+  }
+
 };
 
-let lastTradeDate = new Date();
+const FuctionForTrade=(order, nameofAccount,INS)=>{
+  var newDate= new Date();
 
-function executeTrade(order, account) {
-  const currentDate = new Date();
+  // if(newDate - dateOfLastTrade< 2000)
+  //   {
+  //     console.log("stopppppppppppppppppppppppppppppp")
+  //     return
+  //   }
+  try{
 
-  if (currentDate - lastTradeDate < 2000) {
-    console.log("Trade blocked: Too soon after last trade.");
-    return;
+    console.log("FuctionForTrade",order, nameofAccount,INS )
+    const path =  "C:\\Users\\"+os.userInfo().username+"\\Documents\\NinjaTrader 8\\incoming\\oif." +  uuidv4() + ".txt";
+    const mrkt = "PLACE;"+nameofAccount+";<INS>;<ACT>;<QTY>;MARKET;<LIMIT>;;DAY;;;;";
+    var ordr;
+
+    var updated_ins=INS;
+    if(updated_ins.includes("SEP24")){
+      updated_ins = updated_ins.replace("SEP24", "12-24")
+      console.log("new ins is", updated_ins)
+    }
+
+    if(updated_ins.includes("DEC24")){
+      updated_ins = updated_ins.replace("DEC24", "12-24")
+      console.log("new ins is", updated_ins)
+    }
+
+    if(!PrevFunction[updated_ins].hasOwnProperty(nameofAccount)){
+      console.log("INS", INS, nameofAccount, "NOT IN PREV")
+
+      PrevFunction[updated_ins][nameofAccount] = {
+        'action': "FLAT",
+        'Amount': 0
+      };
+      console.log("new prev", PrevFunction)
+
+    }
+
+    Currentvalues['action'] =returnAction(order)
+    Currentvalues['Amount'] = returnAmount(order)
+
+
+    if( Currentvalues['action']==("FLAT")){
+      ordr = "CLOSEPOSITION;<ACCOUNT>;<INSTRUMENT>;;;;;;;;;;".replace("<ACCOUNT>",nameofAccount).replace("<INSTRUMENT>",updated_ins);
+      console.log("ordr ", ordr);
+      fs.writeFileSync(path,ordr);
+      PrevFunction[updated_ins][nameofAccount]['action'] = Currentvalues['action']
+      PrevFunction[updated_ins][nameofAccount]['Amount'] = parseInt(Currentvalues['Amount'])
+      console.log("FLAT", updated_ins, nameofAccount, PrevFunction[updated_ins][nameofAccount])
+      dateOfLastTrade= newDate;
+      return null;
+    }
+
+
+    //console.log("--> ",INS,PrevFunction[INS], Currentvalues)
+
+    var action= Currentvalues["action"];
+    var amount= parseInt(Currentvalues['Amount'])-  PrevFunction[updated_ins][nameofAccount]['Amount'];
+
+    if (parseInt(Currentvalues['Amount']) - PrevFunction[updated_ins][nameofAccount]["Amount"] < 0){
+
+      action = action.includes("BUY") ? "SELL" : "BUY";
+      amount = -amount ;
+    }
+
+    ordr = mrkt.replace("<INS>",updated_ins).replace("<ACT>",action).replace("<QTY>",amount);
+    fs.writeFileSync(path,ordr);
+    PrevFunction[updated_ins][nameofAccount]['action'] = Currentvalues['action']
+    PrevFunction[updated_ins][nameofAccount]['Amount'] = parseInt(Currentvalues['Amount'])
+
+    dateOfLastTrade= newDate;
+    return null;
+  }catch (error) {
+    console.error("error", error);
+    // Expected output: ReferenceError: nonExistentFunction is not defined
+    // (Note: the exact output may be browser-dependent)
   }
-
-  CurrentValues["action"] = parseAction(order);
-  CurrentValues["Amount"] = parseAmount(order);
-  console.log("Current vs Previous:", PrevFunction, CurrentValues);
-
-  let action = CurrentValues["action"];
-  let amount = parseInt(CurrentValues["Amount"]) - PrevFunction[account]["Amount"];
-
-  if (amount < 0) {
-    action = action.includes("BUY") ? "SELL" : "BUY";
-    amount = -amount;
-  }
-
-  const filePath = `C:\\Users\\${os.userInfo().username}\\Documents\\NinjaTrader 8\\incoming\\oif.${uuidv4()}.txt`;
-  const marketOrder = `PLACE;${account};NQ 09-24;${action};${amount};MARKET;;DAY;;;;`;
-
-  let orderCommand = CurrentValues["action"].includes("FLAT")
-      ? `CLOSEPOSITION;${account};NQ 09-24;;;;;;;;;;`
-      : marketOrder;
-
-  try {
-    fs.writeFileSync(filePath, orderCommand);
-    console.log(`Order written to ${filePath}`);
-  } catch (err) {
-    console.error("Error writing order file:", err);
-  }
-
-  PrevFunction[account] = { action: CurrentValues["action"], Amount: parseInt(CurrentValues["Amount"]) };
-  lastTradeDate = currentDate;
 }
 
-function parseAction(data) {
-  return data.includes("FLAT") ? "FLAT" : data.includes("LONG") ? "BUY" : "SELL";
-}
+const returnAction = (data) => {
+  return data.includes('FLAT')? 'FLAT' :(data.includes('LONG') ? 'BUY': 'SELL');
+};
 
-function parseAmount(data) {
-  return data.split(";")[1];
-}
-
-// Graceful Shutdown of Server
-function handleShutdown() {
-  console.log("Shutting down server...");
-  server.close(() => {
-    console.log("Server closed.");
-    process.exit(0);
-  });
-}
-
-process.on('SIGINT', handleShutdown);  // On Ctrl+C
-process.on('SIGTERM', handleShutdown); // On kill command
-
-function start() {
-  server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
-
-module.exports = { start };
+const returnAmount = (data) => {
+  return data.split(';')[1];
+};
