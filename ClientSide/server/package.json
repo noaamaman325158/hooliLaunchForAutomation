@@ -1,7 +1,7 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "main.js",
   "license": "MIT",
   "scripts": {
     "start": "nodemon app.js"
@@ -15,6 +15,24 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
     "nodemon": "^2.0.4"
+  },
+  "build": {
+    "appId": "com.noaa.hooliLaunch",
+    "productName": "back",
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/{dev-only-package}"
+    ]
   }
+
 }
