@@ -25,7 +25,7 @@ app.use((req, res, next) => {
 
 const LOCAL_MEMORY = {
   destinations: ["Sim102"],
-  server_ip: "127.0.0.1",
+  server_ip: "83.229.81.169",
   allowed_clients: [],
   clients_connected: [],
   client_destinations: [],
