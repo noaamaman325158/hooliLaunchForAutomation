@@ -172,43 +172,72 @@ jobs:
         from google.oauth2 import service_account
         from googleapiclient.discovery import build
         from googleapiclient.http import MediaFileUpload
+        from googleapiclient.errors import HttpError
         import os
+        import json
 
-        # Setup credentials
-        credentials = service_account.Credentials.from_service_account_file(
-            'service-account.json',
-            scopes=['https://www.googleapis.com/auth/drive.file']
-        )
-
-        # Create Drive API service
-        service = build('drive', 'v3', credentials=credentials)
-
-        # File to upload
-        file_path = 'electron-project/dist/Hooli Launch Setup 1.0.0.exe'
-        folder_id = '${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}'
-
-        if os.path.exists(file_path):
-            file_metadata = {
-                'name': 'Hooli Launch Setup 1.0.0.exe',
-                'parents': [folder_id]
-            }
-            
-            media = MediaFileUpload(
-                file_path,
-                mimetype='application/octet-stream',
-                resumable=True
+        try:
+            # Setup credentials with broader scope
+            credentials = service_account.Credentials.from_service_account_file(
+                'service-account.json',
+                scopes=[
+                    'https://www.googleapis.com/auth/drive',
+                    'https://www.googleapis.com/auth/drive.file',
+                    'https://www.googleapis.com/auth/drive.metadata'
+                ]
             )
-            
-            file = service.files().create(
-                body=file_metadata,
-                media_body=media,
-                fields='id'
-            ).execute()
-            
-            print(f'File uploaded successfully. File ID: {file.get("id")}')
-        else:
-            print(f'Error: File not found at {file_path}')
-            exit(1)
+
+            # Print service account email for verification
+            service_account_info = json.load(open('service-account.json'))
+            print(f"Using service account: {service_account_info['client_email']}")
+
+            # Create Drive API service
+            service = build('drive', 'v3', credentials=credentials)
+
+            # File to upload
+            file_path = 'electron-project/dist/Hooli Launch Setup 1.0.0.exe'
+            folder_id = '${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}'
+
+            print(f"Checking folder permissions for folder ID: {folder_id}")
+            try:
+                # Check folder permissions
+                folder = service.files().get(
+                    fileId=folder_id,
+                    fields='capabilities'
+                ).execute()
+                print(f"Folder permissions: {folder}")
+            except HttpError as e:
+                print(f"Error checking folder permissions: {str(e)}")
+
+            if os.path.exists(file_path):
+                print(f"Found file to upload: {file_path}")
+                file_metadata = {
+                    'name': 'Hooli Launch Setup 1.0.0.exe',
+                    'parents': [folder_id]
+                }
+                
+                media = MediaFileUpload(
+                    file_path,
+                    mimetype='application/octet-stream',
+                    resumable=True
+                )
+                
+                print("Starting file upload...")
+                file = service.files().create(
+                    body=file_metadata,
+                    media_body=media,
+                    fields='id,name',
+                    supportsAllDrives=True
+                ).execute()
+                
+                print(f'File uploaded successfully. File ID: {file.get("id")}, Name: {file.get("name")}')
+            else:
+                print(f'Error: File not found at {file_path}')
+                exit(1)
+
+        except Exception as e:
+            print(f"Error during upload process: {str(e)}")
+            raise e
         EOF
 
     - name: Track large files with Git LFS
