@@ -40,16 +40,16 @@ jobs:
         node-version: '20.x'
         registry-url: 'https://registry.npmjs.org'
 
-    - name: Install Dependencies for electron project
-      working-directory: ./electron-project
-      run: |
-        echo "Installing electron and electron-builder explicitly..."
-        npm install electron@latest electron-builder@latest --save-dev
-        echo "Installing remaining dependencies..."
-        npm install --legacy-peer-deps
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
+    # - name: Install Dependencies for electron project
+    #   working-directory: ./electron-project
+    #   run: |
+    #     echo "Installing electron and electron-builder explicitly..."
+    #     npm install electron@latest electron-builder@latest --save-dev
+    #     echo "Installing remaining dependencies..."
+    #     npm install --legacy-peer-deps
+    #   env:
+    #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    #     NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
 
     - name: Install Wine
       run: |
