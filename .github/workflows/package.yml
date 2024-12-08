@@ -8,6 +8,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    
     steps:
     - name: Checkout source project
       uses: actions/checkout@v4
@@ -145,6 +149,67 @@ jobs:
       working-directory: ./electron-project
       run: |
         npx electron-builder --win --x64 --publish never
+
+    - name: Install Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+        export_default_credentials: true
+
+    - name: Authenticate to Google Cloud
+      run: |
+        echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}' > service-account.json
+        gcloud auth activate-service-account --key-file=service-account.json
+
+    - name: Install Google Drive CLI tool
+      run: |
+        pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
+
+    - name: Upload to Google Drive
+      run: |
+        python - <<EOF
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+        from googleapiclient.http import MediaFileUpload
+        import os
+
+        # Setup credentials
+        credentials = service_account.Credentials.from_service_account_file(
+            'service-account.json',
+            scopes=['https://www.googleapis.com/auth/drive.file']
+        )
+
+        # Create Drive API service
+        service = build('drive', 'v3', credentials=credentials)
+
+        # File to upload
+        file_path = 'electron-project/dist/Hooli Launch Setup 1.0.0.exe'
+        folder_id = '${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}'
+
+        if os.path.exists(file_path):
+            file_metadata = {
+                'name': 'Hooli Launch Setup 1.0.0.exe',
+                'parents': [folder_id]
+            }
+            
+            media = MediaFileUpload(
+                file_path,
+                mimetype='application/octet-stream',
+                resumable=True
+            )
+            
+            file = service.files().create(
+                body=file_metadata,
+                media_body=media,
+                fields='id'
+            ).execute()
+            
+            print(f'File uploaded successfully. File ID: {file.get("id")}')
+        else:
+            print(f'Error: File not found at {file_path}')
+            exit(1)
+        EOF
 
     - name: Track large files with Git LFS
       working-directory: ./electron-project
