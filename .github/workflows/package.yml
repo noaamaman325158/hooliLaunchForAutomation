@@ -1,15 +1,12 @@
 name: Build and Package React App
-
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout source project
       uses: actions/checkout@v4
@@ -42,12 +39,22 @@ jobs:
     - name: Copy build files to electron project
       run: |
         cp -r ClientSide/client/build/* electron-project/build/
+
+    - name: Install electron-builder dependencies
+      working-directory: ./electron-project
+      run: |
+        npm ci
+
+    - name: Run electron-builder
+      working-directory: ./electron-project
+      run: |
+        npx electron-builder --win --x64
         
     - name: Commit and push to electron project
       working-directory: ./electron-project
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
-        git add build
-        git commit -m "Update build files from source project" || echo "No changes to commit"
+        git add build dist
+        git commit -m "Update build files and electron package" || echo "No changes to commit"
         git push
