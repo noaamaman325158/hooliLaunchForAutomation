@@ -20,6 +20,7 @@ jobs:
         with:
           node-version: '18.x'
           cache: 'npm'
+          cache-dependency-path: './ClientSide/client/package-lock.json'
 
       # Build React Project
       - name: Install Dependencies
