@@ -17,7 +17,7 @@ jobs:
     - name: Checkout electron packaging project
       uses: actions/checkout@v4
       with:
-        repository: your-org/electron-project  # החלף עם שם המאגר האמיתי של פרויקט האריזה
+        repository: noaamaman325158/hooliLaunchPackage  
         token: ${{ secrets.PAT_TOKEN }}
         path: electron-project
 
