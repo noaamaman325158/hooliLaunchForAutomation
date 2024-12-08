@@ -4,6 +4,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -47,6 +48,70 @@ jobs:
       run: |
         npm ci
         CI=false npm run build
+
+    - name: Fix paths in index.html
+      working-directory: ./ClientSide/client
+      run: |
+        node -e '
+          const fs = require("fs");
+          const path = require("path");
+          
+          // Read build directory contents
+          const buildDir = path.join("build");
+          const staticDir = path.join(buildDir, "static");
+          
+          // Find CSS and JS files
+          const cssFiles = fs.readdirSync(path.join(staticDir, "css"))
+            .filter(file => file.endsWith(".css"))
+            .map(file => `/static/css/${file}`);
+            
+          const jsFiles = fs.readdirSync(path.join(staticDir, "js"))
+            .filter(file => file.endsWith(".js"))
+            .map(file => `/static/js/${file}`);
+            
+          console.log("Found CSS files:", cssFiles);
+          console.log("Found JS files:", jsFiles);
+          
+          // Read index.html
+          const indexPath = path.join(buildDir, "index.html");
+          let html = fs.readFileSync(indexPath, "utf8");
+          
+          // Fix base paths
+          html = html.replace(/href="\//g, "href=\"./");
+          html = html.replace(/src="\//g, "src=\"./");
+          
+          // Fix paths for static files
+          cssFiles.forEach(cssFile => {
+            const oldPath = `href="${cssFile}"`;
+            const newPath = `href=".${cssFile}"`;
+            html = html.replace(oldPath, newPath);
+          });
+          
+          jsFiles.forEach(jsFile => {
+            const oldPath = `src="${jsFile}"`;
+            const newPath = `src=".${jsFile}"`;
+            html = html.replace(oldPath, newPath);
+          });
+          
+          // Add electron-specific scripts
+          const electronScript = `
+            <script>
+              if (typeof process === "object") {
+                window.__dirname = process.cwd();
+                window.ipcRenderer = require("electron").ipcRenderer;
+              }
+            </script>
+          `;
+          html = html.replace("</head>", `${electronScript}</head>`);
+          
+          // Save updated file
+          fs.writeFileSync(indexPath, html);
+          console.log("Updated index.html with correct static asset paths");
+          
+          // Log final content for verification
+          console.log("\nUpdated index.html content:");
+          console.log(html);
+        '
         
     - name: Clear and Create electron build directory
       run: |
