@@ -3,14 +3,17 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [ main ]  # Adjust according to your branch name
+    branches: [ main ]  
   pull_request:
     branches: [ main ]
-  workflow_dispatch:    # Allows manual trigger
+  workflow_dispatch:    
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ClientSide/client
     steps:
       - name: Checkout React Repository
         uses: actions/checkout@v3
