@@ -5,8 +5,6 @@ let socket = null;
 let socketRemoteServer = null;
 
 function App() {
-  let count = 0;
-
   const [destination, setDestination] = useState("");
   const [allDestinations, setAllDestinationsData] = useState([]);
   const [localConnectionStatus, setLocalConnectionStatus] = useState(false);
