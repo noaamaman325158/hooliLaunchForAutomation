@@ -17,6 +17,17 @@ jobs:
         repository: noaamaman325158/hooliLaunchPackage  
         token: ${{ secrets.PAT_TOKEN }}
         path: electron-project
+        lfs: true
+
+    - name: Setup Git LFS
+      working-directory: ./electron-project
+      run: |
+        git lfs install
+        echo "*.exe filter=lfs diff=lfs merge=lfs -text" > .gitattributes
+        echo "*.dll filter=lfs diff=lfs merge=lfs -text" >> .gitattributes
+        git add .gitattributes
+        git commit -m "Add Git LFS configuration" || echo "No changes to commit"
+        git push || echo "No changes to push"
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -25,7 +36,6 @@ jobs:
         cache: 'npm'
         cache-dependency-path: './ClientSide/client/package-lock.json'
 
-    # Install Wine and other dependencies
     - name: Install Wine
       run: |
         sudo dpkg --add-architecture i386
@@ -70,12 +80,21 @@ jobs:
       working-directory: ./electron-project
       run: |
         npx electron-builder --win --x64 --publish never
+
+    - name: Track large files with Git LFS
+      working-directory: ./electron-project
+      run: |
+        git lfs track "dist/**/*.exe"
+        git lfs track "dist/**/*.dll"
+        git add .gitattributes dist/
+        git add build
+        git status
         
     - name: Commit and push to electron project
       working-directory: ./electron-project
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
-        git add build dist package.json
+        git add -A
         git commit -m "Update build files and electron package" || echo "No changes to commit"
         git push
