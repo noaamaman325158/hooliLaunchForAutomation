@@ -1,58 +1,53 @@
-# .github/workflows/build-and-deploy.yml
-name: Build and Deploy
+name: Build and Package React App
 
 on:
   push:
-    branches: [ main ]  
+    branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:    
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./ClientSide/client
+
     steps:
-      - name: Checkout React Repository
-        uses: actions/checkout@v3
+    - name: Checkout source project
+      uses: actions/checkout@v4
+      
+    - name: Checkout electron packaging project
+      uses: actions/checkout@v4
+      with:
+        repository: your-org/electron-project  # החלף עם שם המאגר האמיתי של פרויקט האריזה
+        token: ${{ secrets.PAT_TOKEN }}
+        path: electron-project
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18.x'
-          cache: 'npm'
-          cache-dependency-path: './ClientSide/client/package-lock.json'
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: './ClientSide/client/package-lock.json'
 
-      # Build React Project
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Build React Project
-        run: npm run build
-
-      # Checkout Electron Repository
-      - name: Checkout Electron Repository
-        uses: actions/checkout@v3
-        with:
-          repository: noaamaman325158/hooliLaunchPackage 
-          token: ${{ secrets.GH_PAT }}
-          path: electron-project
-
-      # Copy Build and Push
-      - name: Copy Build to Electron Project
-        run: |
-          rm -rf electron-project/build
-          cp -r build electron-project/build
-
-      - name: Commit and Push Build
-        run: |
-          cd electron-project
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add build
-          git commit -m "Update build from React project" || echo "No changes to commit"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+    - name: Build React App
+      working-directory: ./ClientSide/client
+      run: |
+        npm ci
+        CI=false npm run build
+        
+    - name: Clear and Create electron build directory
+      run: |
+        rm -rf electron-project/build
+        mkdir -p electron-project/build
+      
+    - name: Copy build files to electron project
+      run: |
+        cp -r ClientSide/client/build/* electron-project/build/
+        
+    - name: Commit and push to electron project
+      working-directory: ./electron-project
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add build
+        git commit -m "Update build files from source project" || echo "No changes to commit"
+        git push
