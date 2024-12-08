@@ -40,20 +40,16 @@ jobs:
         node-version: '20.x'
         registry-url: 'https://registry.npmjs.org'
 
-    - name: Clean npm cache and install dependencies
+    - name: Install Dependencies for electron project
       working-directory: ./electron-project
       run: |
-        echo "Cleaning npm cache..."
-        npm cache clean --force
-        
-        echo "Removing existing node_modules and package-lock.json..."
-        rm -rf node_modules package-lock.json
-        
-        echo "Installing dependencies..."
-        npm install --verbose
-        
-        echo "Listing installed packages..."
-        npm list --depth=0
+        echo "Installing electron and electron-builder explicitly..."
+        npm install electron@latest electron-builder@latest --save-dev
+        echo "Installing remaining dependencies..."
+        npm install --legacy-peer-deps
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
 
     - name: Install Wine
       run: |
@@ -153,11 +149,6 @@ jobs:
           };
           fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
         '
-
-    - name: Install electron-builder dependencies
-      working-directory: ./electron-project
-      run: |
-        npm ci
 
     - name: Run electron-builder
       working-directory: ./electron-project
