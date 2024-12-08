@@ -1,0 +1,55 @@
+# .github/workflows/build-and-deploy.yml
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main ]  # Adjust according to your branch name
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:    # Allows manual trigger
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout React Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+          cache-dependency-path: './ClientSide/client/package-lock.json'
+
+      # Build React Project
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build React Project
+        run: npm run build
+
+      # Checkout Electron Repository
+      - name: Checkout Electron Repository
+        uses: actions/checkout@v3
+        with:
+          repository: noaamaman325158/hooliLaunchPackage 
+          token: ${{ secrets.GH_PAT }}
+          path: electron-project
+
+      # Copy Build and Push
+      - name: Copy Build to Electron Project
+        run: |
+          rm -rf electron-project/build
+          cp -r build electron-project/build
+
+      - name: Commit and Push Build
+        run: |
+          cd electron-project
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add build
+          git commit -m "Update build from React project" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
