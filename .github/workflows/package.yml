@@ -25,6 +25,13 @@ jobs:
         cache: 'npm'
         cache-dependency-path: './ClientSide/client/package-lock.json'
 
+    # Install Wine and other dependencies
+    - name: Install Wine
+      run: |
+        sudo dpkg --add-architecture i386
+        sudo apt-get update
+        sudo apt-get install -y wine64 wine32
+
     - name: Build React App
       working-directory: ./ClientSide/client
       run: |
@@ -40,6 +47,20 @@ jobs:
       run: |
         cp -r ClientSide/client/build/* electron-project/build/
 
+    - name: Update package.json for electron-builder
+      working-directory: ./electron-project
+      run: |
+        node -e '
+          const fs = require("fs");
+          const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+          pkg.description = pkg.description || "Hooli Launch Application";
+          pkg.author = pkg.author || {
+            "name": "Hooli Launch Team",
+            "email": "your-email@example.com"
+          };
+          fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
+        '
+
     - name: Install electron-builder dependencies
       working-directory: ./electron-project
       run: |
@@ -48,13 +69,13 @@ jobs:
     - name: Run electron-builder
       working-directory: ./electron-project
       run: |
-        npx electron-builder --win --x64
+        npx electron-builder --win --x64 --publish never
         
     - name: Commit and push to electron project
       working-directory: ./electron-project
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
-        git add build dist
+        git add build dist package.json
         git commit -m "Update build files and electron package" || echo "No changes to commit"
         git push
