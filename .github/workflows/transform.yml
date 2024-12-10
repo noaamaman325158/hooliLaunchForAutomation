@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     
     steps:
@@ -244,3 +244,5 @@ jobs:
           - Electron package updated
         draft: false
         prerelease: false
+
+    
