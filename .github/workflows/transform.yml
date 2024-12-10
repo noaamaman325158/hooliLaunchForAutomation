@@ -54,7 +54,7 @@ jobs:
         let originalHtml = fs.readFileSync(indexPath, "utf8");
         const cssHash = originalHtml.match(/main\.(.*?)\.css/)[1];
         const jsHash = originalHtml.match(/main\.(.*?)\.js/)[1];
-        const newHtml = `<!DOCTYPE html>
+        const newHtml = String.raw`<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -79,8 +79,6 @@ jobs:
     <div id="root"></div>
 </body>
 </html>`;
-        fs.writeFileSync(indexPath, newHtml);
-        console.log("Updated index.html with correct paths and MIME types");
 EOF
 
     - name: Run fix-paths script
