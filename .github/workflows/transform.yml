@@ -81,7 +81,7 @@ jobs:
 </html>`;
         fs.writeFileSync(indexPath, newHtml);
         console.log("Updated index.html with correct paths and MIME types");
-        EOL
+EOF
 
     - name: Run fix-paths script
       working-directory: ./ClientSide/client
