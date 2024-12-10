@@ -154,9 +154,10 @@ jobs:
         from datetime import datetime
 
         try:
-            # Generate timestamp in the required format
+            # Generate timestamp and version folder name
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            new_file_name = f"HooliLaunch_v{timestamp}.exe"
+            version_folder_name = f"v{timestamp}"
+            new_file_name = "HooliLaunch.exe"
 
             credentials = service_account.Credentials.from_service_account_file(
                 'service-account.json',
@@ -171,15 +172,30 @@ jobs:
             print(f"Using service account: {service_account_info['client_email']}")
 
             service = build('drive', 'v3', credentials=credentials)
+            base_folder_id = os.environ['FOLDER_ID']
+
+            # Create version folder
+            version_folder_metadata = {
+                'name': version_folder_name,
+                'mimeType': 'application/vnd.google-apps.folder',
+                'parents': [base_folder_id]
+            }
+            
+            version_folder = service.files().create(
+                body=version_folder_metadata,
+                fields='id'
+            ).execute()
+            
+            version_folder_id = version_folder.get('id')
+            print(f"Created version folder: {version_folder_name}")
 
             file_path = 'electron-project/dist/Hooli Launch Setup 1.0.0.exe'
-            folder_id = os.environ['FOLDER_ID']
-
+            
             if os.path.exists(file_path):
                 print(f"Found file to upload: {file_path}")
                 file_metadata = {
-                    'name': new_file_name,  # Using the timestamped filename
-                    'parents': [folder_id]
+                    'name': new_file_name,
+                    'parents': [version_folder_id]  # Upload to the version folder
                 }
                 
                 media = MediaFileUpload(
@@ -188,7 +204,7 @@ jobs:
                     resumable=True
                 )
                 
-                print(f"Starting file upload as: {new_file_name}")
+                print(f"Starting file upload to folder {version_folder_name}")
                 file = service.files().create(
                     body=file_metadata,
                     media_body=media,
@@ -196,7 +212,8 @@ jobs:
                     supportsAllDrives=True
                 ).execute()
                 
-                print(f'File uploaded successfully. File ID: {file.get("id")}, Name: {file.get("name")}')
+                print(f'File uploaded successfully to {version_folder_name}/')
+                print(f'File ID: {file.get("id")}, Name: {file.get("name")}')
             else:
                 print(f'Error: File not found at {file_path}')
                 exit(1)
