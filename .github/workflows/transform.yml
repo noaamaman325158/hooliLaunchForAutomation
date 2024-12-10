@@ -151,14 +151,35 @@ jobs:
         from googleapiclient.errors import HttpError
         import os
         import json
-        from datetime import datetime
+        import re
+
+        def get_latest_version(service, folder_id):
+            try:
+                # Search for folders that match the pattern 'v\d+'
+                results = service.files().list(
+                    q=f"'{folder_id}' in parents and mimeType='application/vnd.google-apps.folder' and name matches '^v\\d+$'",
+                    fields="files(name)",
+                    orderBy="name desc"
+                ).execute()
+                
+                folders = results.get('files', [])
+                
+                if not folders:
+                    return 0  # No existing version folders
+                
+                # Extract version numbers and find the highest
+                latest_version = max(
+                    [int(re.match(r'v(\d+)', folder['name']).group(1)) 
+                     for folder in folders if re.match(r'v(\d+)', folder['name'])]
+                    or [0]
+                )
+                
+                return latest_version
+            except Exception as e:
+                print(f"Error getting latest version: {str(e)}")
+                return 0
 
         try:
-            # Generate timestamp and version folder name
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            version_folder_name = f"v{timestamp}"
-            new_file_name = "HooliLaunch.exe"
-
             credentials = service_account.Credentials.from_service_account_file(
                 'service-account.json',
                 scopes=[
@@ -174,7 +195,12 @@ jobs:
             service = build('drive', 'v3', credentials=credentials)
             base_folder_id = os.environ['FOLDER_ID']
 
-            # Create version folder
+            # Get latest version and increment
+            latest_version = get_latest_version(service, base_folder_id)
+            new_version = latest_version + 1
+            version_folder_name = f"v{new_version}"
+
+            # Create new version folder
             version_folder_metadata = {
                 'name': version_folder_name,
                 'mimeType': 'application/vnd.google-apps.folder',
@@ -194,8 +220,8 @@ jobs:
             if os.path.exists(file_path):
                 print(f"Found file to upload: {file_path}")
                 file_metadata = {
-                    'name': new_file_name,
-                    'parents': [version_folder_id]  # Upload to the version folder
+                    'name': 'HooliLaunch.exe',
+                    'parents': [version_folder_id]
                 }
                 
                 media = MediaFileUpload(
@@ -214,6 +240,10 @@ jobs:
                 
                 print(f'File uploaded successfully to {version_folder_name}/')
                 print(f'File ID: {file.get("id")}, Name: {file.get("name")}')
+                
+                # Store the version number for the release
+                with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+                    print(f'folder_version={new_version}', file=fh)
             else:
                 print(f'Error: File not found at {file_path}')
                 exit(1)
