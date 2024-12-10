@@ -22,18 +22,7 @@ jobs:
         repository: noaamaman325158/hooliLaunchPackage  
         token: ${{ secrets.PAT_TOKEN }}
         path: electron-project
-        lfs: true
-
-    - name: Setup Git LFS
-      working-directory: ./electron-project
-      run: |
-        git lfs install
-        printf "*.exe filter=lfs diff=lfs merge=lfs -text\n*.dll filter=lfs diff=lfs merge=lfs -text\n" > .gitattributes
-        git add .gitattributes
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git commit -m "Add Git LFS configuration" || echo "No changes to commit"
-        git push || echo "No changes to push"
+        lfs: false
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -53,51 +42,49 @@ jobs:
         npm ci
         CI=false npm run build
 
-    - name: Create fix-paths script
-      working-directory: ./ClientSide/client
-      run: |
-        echo 'const fs = require("fs");
-        const path = require("path");
-        
-        const buildDir = path.join("build");
-        const indexPath = path.join(buildDir, "index.html");
-        let originalHtml = fs.readFileSync(indexPath, "utf8");
-        
-        const cssHash = originalHtml.match(/main\.(.*?)\.css/)[1];
-        const jsHash = originalHtml.match(/main\.(.*?)\.js/)[1];
-        
-        const newHtml = `<!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="utf-8" />
-            <link rel="icon" href="./favicon.ico" />
-            <meta name="viewport" content="width=device-width,initial-scale=1" />
-            <meta name="theme-color" content="#000000" />
-            <meta name="description" content="Modern React application" />
-            <link rel="apple-touch-icon" href="./logo152.png" />
-            <link rel="manifest" href="./manifest.json" />
-            <link href="./static/css/main.${cssHash}.css" rel="stylesheet" type="text/css" />
-            <title>Your App Name</title>
-            <script defer="defer" src="./static/js/main.${jsHash}.js" type="text/javascript"></script>
-            <script>
-              if (typeof process === "object") {
-                window.__dirname = process.cwd();
-                window.ipcRenderer = require("electron").ipcRenderer;
-              }
-            </script>
-        </head>
-        <body>
-            <noscript>You need to enable JavaScript to run this application. Please enable it to continue.</noscript>
-            <div id="root"></div>
-        </body>
-        </html>`;
-        
-        fs.writeFileSync(indexPath, newHtml);
-        console.log("Updated index.html with correct paths and MIME types");' > fix-paths.js
-
     - name: Fix paths in index.html
       working-directory: ./ClientSide/client
-      run: node fix-paths.js
+      run: |
+        node -e "
+          const fs = require('fs');
+          const path = require('path');
+          
+          const buildDir = path.join('build');
+          const indexPath = path.join(buildDir, 'index.html');
+          let originalHtml = fs.readFileSync(indexPath, 'utf8');
+          
+          const cssHash = originalHtml.match(/main\.(.*?)\.css/)[1];
+          const jsHash = originalHtml.match(/main\.(.*?)\.js/)[1];
+          
+          const newHtml = \`<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8' />
+    <link rel='icon' href='./favicon.ico' />
+    <meta name='viewport' content='width=device-width,initial-scale=1' />
+    <meta name='theme-color' content='#000000' />
+    <meta name='description' content='Modern React application' />
+    <link rel='apple-touch-icon' href='./logo152.png' />
+    <link rel='manifest' href='./manifest.json' />
+    <link href='./static/css/main.\${cssHash}.css' rel='stylesheet' type='text/css' />
+    <title>Your App Name</title>
+    <script defer='defer' src='./static/js/main.\${jsHash}.js' type='text/javascript'></script>
+    <script>
+      if (typeof process === 'object') {
+        window.__dirname = process.cwd();
+        window.ipcRenderer = require('electron').ipcRenderer;
+      }
+    </script>
+</head>
+<body>
+    <noscript>You need to enable JavaScript to run this application. Please enable it to continue.</noscript>
+    <div id='root'></div>
+</body>
+</html>\`;
+          
+          fs.writeFileSync(indexPath, newHtml);
+          console.log('Updated index.html with correct paths and MIME types');
+        "
 
     - name: Clear and Create electron build directory
       run: |
@@ -111,16 +98,16 @@ jobs:
     - name: Update package.json for electron-builder
       working-directory: ./electron-project
       run: |
-        node -e '
-          const fs = require("fs");
-          const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
-          pkg.description = pkg.description || "Hooli Launch Application";
+        node -e "
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          pkg.description = pkg.description || 'Hooli Launch Application';
           pkg.author = pkg.author || {
-            "name": "Hooli Launch Team",
-            "email": "your-email@example.com"
+            'name': 'Hooli Launch Team',
+            'email': 'your-email@example.com'
           };
-          fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
-        '
+          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+        "
 
     - name: Run electron-builder
       working-directory: ./electron-project
@@ -145,77 +132,99 @@ jobs:
 
     - name: Upload to Google Drive
       run: |
-        python - <<'EOF'
-        from google.oauth2 import service_account
-        from googleapiclient.discovery import build
-        from googleapiclient.http import MediaFileUpload
-        from googleapiclient.errors import HttpError
-        import os
-        import json
+        python3 - <<'EOF'
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+from googleapiclient.errors import HttpError
+import os
+import json
 
-        try:
-            credentials = service_account.Credentials.from_service_account_file(
-                'service-account.json',
-                scopes=[
-                    'https://www.googleapis.com/auth/drive',
-                    'https://www.googleapis.com/auth/drive.file',
-                    'https://www.googleapis.com/auth/drive.metadata'
-                ]
-            )
+try:
+    credentials = service_account.Credentials.from_service_account_file(
+        'service-account.json',
+        scopes=[
+            'https://www.googleapis.com/auth/drive',
+            'https://www.googleapis.com/auth/drive.file',
+            'https://www.googleapis.com/auth/drive.metadata'
+        ]
+    )
 
-            service_account_info = json.load(open('service-account.json'))
-            print(f"Using service account: {service_account_info['client_email']}")
+    service_account_info = json.load(open('service-account.json'))
+    print(f"Using service account: {service_account_info['client_email']}")
 
-            service = build('drive', 'v3', credentials=credentials)
+    service = build('drive', 'v3', credentials=credentials)
 
-            file_path = 'electron-project/dist/Hooli Launch Setup 1.0.0.exe'
-            folder_id = '${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}'
+    file_path = 'electron-project/dist/Hooli Launch Setup 1.0.0.exe'
+    folder_id = '${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}'
 
-            if os.path.exists(file_path):
-                print(f"Found file to upload: {file_path}")
-                file_metadata = {
-                    'name': 'Hooli Launch Setup 1.0.0.exe',
-                    'parents': [folder_id]
-                }
-                
-                media = MediaFileUpload(
-                    file_path,
-                    mimetype='application/octet-stream',
-                    resumable=True
-                )
-                
-                print("Starting file upload...")
-                file = service.files().create(
-                    body=file_metadata,
-                    media_body=media,
-                    fields='id,name',
-                    supportsAllDrives=True
-                ).execute()
-                
-                print(f'File uploaded successfully. File ID: {file.get("id")}, Name: {file.get("name")}')
-            else:
-                print(f'Error: File not found at {file_path}')
-                exit(1)
-
-        except Exception as e:
-            print(f"Error during upload process: {str(e)}")
-            raise e
-        EOF
-
-    - name: Track large files with Git LFS
-      working-directory: ./electron-project
-      run: |
-        git lfs track "dist/**/*.exe"
-        git lfs track "dist/**/*.dll"
-        git add .gitattributes dist/
-        git add build
-        git status
+    if os.path.exists(file_path):
+        print(f"Found file to upload: {file_path}")
+        file_metadata = {
+            'name': 'Hooli Launch Setup 1.0.0.exe',
+            'parents': [folder_id]
+        }
         
-    - name: Commit and push to electron project
-      working-directory: ./electron-project
+        media = MediaFileUpload(
+            file_path,
+            mimetype='application/octet-stream',
+            resumable=True
+        )
+        
+        print("Starting file upload...")
+        file = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id,name',
+            supportsAllDrives=True
+        ).execute()
+        
+        print(f'File uploaded successfully. File ID: {file.get("id")}, Name: {file.get("name")}')
+    else:
+        print(f'Error: File not found at {file_path}')
+        exit(1)
+
+except Exception as e:
+    print(f"Error during upload process: {str(e)}")
+    raise e
+EOF
+
+    - name: Configure Git for version update
       run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git add -A
-        git commit -m "Update build files and electron package" || echo "No changes to commit"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+
+    - name: Update version
+      run: |
+        VERSION=$(node -p "require('./package.json').version")
+        MAJOR=$(echo $VERSION | cut -d. -f1)
+        MINOR=$(echo $VERSION | cut -d. -f2)
+        PATCH=$(echo $VERSION | cut -d. -f3)
+        NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+        
+        # Update version in package.json
+        sed -i "s/\"version\": \"$VERSION\"/\"version\": \"$NEW_VERSION\"/" package.json
+        
+        git add package.json
+        git commit -m "Bump version to $NEW_VERSION [skip ci]"
         git push
+        
+        echo "Updated version to $NEW_VERSION"
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.version.outputs.new_version }}
+        release_name: Release v${{ steps.version.outputs.new_version }}
+        body: |
+          New release version ${{ steps.version.outputs.new_version }}
+          
+          Changes in this release:
+          - Updated build artifacts
+          - Automated version bump
+          - Electron package updated
+        draft: false
+        prerelease: false
