@@ -44,17 +44,15 @@ jobs:
 
     - name: Create fix-paths script
       working-directory: ./ClientSide/client
-      shell: bash
       run: |
-        cat > fix-paths.js << 'EOF'
-        const fs = require("fs");
+        echo 'const fs = require("fs");
         const path = require("path");
         const buildDir = path.join("build");
         const indexPath = path.join(buildDir, "index.html");
         let originalHtml = fs.readFileSync(indexPath, "utf8");
         const cssHash = originalHtml.match(/main\.(.*?)\.css/)[1];
         const jsHash = originalHtml.match(/main\.(.*?)\.js/)[1];
-        const newHtml = String.raw`<!DOCTYPE html>
+        const newHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -79,7 +77,8 @@ jobs:
     <div id="root"></div>
 </body>
 </html>`;
-EOF
+        fs.writeFileSync(indexPath, newHtml);
+        console.log("Updated index.html with correct paths and MIME types");' > fix-paths.js
 
     - name: Run fix-paths script
       working-directory: ./ClientSide/client
