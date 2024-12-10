@@ -42,49 +42,50 @@ jobs:
         npm ci
         CI=false npm run build
 
-    - name: Fix paths in index.html
+    - name: Create fix-paths script
       working-directory: ./ClientSide/client
+      shell: bash
       run: |
-        node -e "
-          const fs = require('fs');
-          const path = require('path');
-          
-          const buildDir = path.join('build');
-          const indexPath = path.join(buildDir, 'index.html');
-          let originalHtml = fs.readFileSync(indexPath, 'utf8');
-          
-          const cssHash = originalHtml.match(/main\.(.*?)\.css/)[1];
-          const jsHash = originalHtml.match(/main\.(.*?)\.js/)[1];
-          
-          const newHtml = \`<!DOCTYPE html>
-<html lang='en'>
+        cat << 'EOL' > fix-paths.js
+        const fs = require("fs");
+        const path = require("path");
+        const buildDir = path.join("build");
+        const indexPath = path.join(buildDir, "index.html");
+        let originalHtml = fs.readFileSync(indexPath, "utf8");
+        const cssHash = originalHtml.match(/main\.(.*?)\.css/)[1];
+        const jsHash = originalHtml.match(/main\.(.*?)\.js/)[1];
+        const newHtml = `<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset='utf-8' />
-    <link rel='icon' href='./favicon.ico' />
-    <meta name='viewport' content='width=device-width,initial-scale=1' />
-    <meta name='theme-color' content='#000000' />
-    <meta name='description' content='Modern React application' />
-    <link rel='apple-touch-icon' href='./logo152.png' />
-    <link rel='manifest' href='./manifest.json' />
-    <link href='./static/css/main.\${cssHash}.css' rel='stylesheet' type='text/css' />
+    <meta charset="utf-8" />
+    <link rel="icon" href="./favicon.ico" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Modern React application" />
+    <link rel="apple-touch-icon" href="./logo152.png" />
+    <link rel="manifest" href="./manifest.json" />
+    <link href="./static/css/main.${cssHash}.css" rel="stylesheet" type="text/css" />
     <title>Your App Name</title>
-    <script defer='defer' src='./static/js/main.\${jsHash}.js' type='text/javascript'></script>
+    <script defer="defer" src="./static/js/main.${jsHash}.js" type="text/javascript"></script>
     <script>
-      if (typeof process === 'object') {
+      if (typeof process === "object") {
         window.__dirname = process.cwd();
-        window.ipcRenderer = require('electron').ipcRenderer;
+        window.ipcRenderer = require("electron").ipcRenderer;
       }
     </script>
 </head>
 <body>
     <noscript>You need to enable JavaScript to run this application. Please enable it to continue.</noscript>
-    <div id='root'></div>
+    <div id="root"></div>
 </body>
-</html>\`;
-          
-          fs.writeFileSync(indexPath, newHtml);
-          console.log('Updated index.html with correct paths and MIME types');
-        "
+</html>`;
+        fs.writeFileSync(indexPath, newHtml);
+        console.log("Updated index.html with correct paths and MIME types");
+        EOL
+
+    - name: Run fix-paths script
+      working-directory: ./ClientSide/client
+      run: node fix-paths.js
 
     - name: Clear and Create electron build directory
       run: |
@@ -95,19 +96,21 @@ jobs:
       run: |
         cp -r ClientSide/client/build/* electron-project/build/
 
-    - name: Update package.json for electron-builder
+    - name: Update package.json
       working-directory: ./electron-project
+      shell: bash
       run: |
-        node -e "
-          const fs = require('fs');
-          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-          pkg.description = pkg.description || 'Hooli Launch Application';
-          pkg.author = pkg.author || {
-            'name': 'Hooli Launch Team',
-            'email': 'your-email@example.com'
-          };
-          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-        "
+        cat << 'EOL' > update-package.js
+        const fs = require("fs");
+        const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+        pkg.description = pkg.description || "Hooli Launch Application";
+        pkg.author = pkg.author || {
+          "name": "Hooli Launch Team",
+          "email": "your-email@example.com"
+        };
+        fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
+        EOL
+        node update-package.js
 
     - name: Run electron-builder
       working-directory: ./electron-project
@@ -130,64 +133,70 @@ jobs:
       run: |
         pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
 
-    - name: Upload to Google Drive
+    - name: Create upload script
+      shell: bash
       run: |
-        python3 - <<'EOF'
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
-from googleapiclient.errors import HttpError
-import os
-import json
+        cat << 'EOL' > upload.py
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+        from googleapiclient.http import MediaFileUpload
+        from googleapiclient.errors import HttpError
+        import os
+        import json
 
-try:
-    credentials = service_account.Credentials.from_service_account_file(
-        'service-account.json',
-        scopes=[
-            'https://www.googleapis.com/auth/drive',
-            'https://www.googleapis.com/auth/drive.file',
-            'https://www.googleapis.com/auth/drive.metadata'
-        ]
-    )
+        try:
+            credentials = service_account.Credentials.from_service_account_file(
+                'service-account.json',
+                scopes=[
+                    'https://www.googleapis.com/auth/drive',
+                    'https://www.googleapis.com/auth/drive.file',
+                    'https://www.googleapis.com/auth/drive.metadata'
+                ]
+            )
 
-    service_account_info = json.load(open('service-account.json'))
-    print(f"Using service account: {service_account_info['client_email']}")
+            service_account_info = json.load(open('service-account.json'))
+            print(f"Using service account: {service_account_info['client_email']}")
 
-    service = build('drive', 'v3', credentials=credentials)
+            service = build('drive', 'v3', credentials=credentials)
 
-    file_path = 'electron-project/dist/Hooli Launch Setup 1.0.0.exe'
-    folder_id = '${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}'
+            file_path = 'electron-project/dist/Hooli Launch Setup 1.0.0.exe'
+            folder_id = os.environ['FOLDER_ID']
 
-    if os.path.exists(file_path):
-        print(f"Found file to upload: {file_path}")
-        file_metadata = {
-            'name': 'Hooli Launch Setup 1.0.0.exe',
-            'parents': [folder_id]
-        }
-        
-        media = MediaFileUpload(
-            file_path,
-            mimetype='application/octet-stream',
-            resumable=True
-        )
-        
-        print("Starting file upload...")
-        file = service.files().create(
-            body=file_metadata,
-            media_body=media,
-            fields='id,name',
-            supportsAllDrives=True
-        ).execute()
-        
-        print(f'File uploaded successfully. File ID: {file.get("id")}, Name: {file.get("name")}')
-    else:
-        print(f'Error: File not found at {file_path}')
-        exit(1)
+            if os.path.exists(file_path):
+                print(f"Found file to upload: {file_path}")
+                file_metadata = {
+                    'name': 'Hooli Launch Setup 1.0.0.exe',
+                    'parents': [folder_id]
+                }
+                
+                media = MediaFileUpload(
+                    file_path,
+                    mimetype='application/octet-stream',
+                    resumable=True
+                )
+                
+                print("Starting file upload...")
+                file = service.files().create(
+                    body=file_metadata,
+                    media_body=media,
+                    fields='id,name',
+                    supportsAllDrives=True
+                ).execute()
+                
+                print(f'File uploaded successfully. File ID: {file.get("id")}, Name: {file.get("name")}')
+            else:
+                print(f'Error: File not found at {file_path}')
+                exit(1)
 
-except Exception as e:
-    print(f"Error during upload process: {str(e)}")
-    raise e
-EOF
+        except Exception as e:
+            print(f"Error during upload process: {str(e)}")
+            raise e
+        EOL
+
+    - name: Run upload script
+      env:
+        FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+      run: python3 upload.py
 
     - name: Configure Git for version update
       run: |
@@ -195,6 +204,8 @@ EOF
         git config --global user.name "github-actions[bot]"
 
     - name: Update version
+      id: version
+      working-directory: ./electron-project
       run: |
         VERSION=$(node -p "require('./package.json').version")
         MAJOR=$(echo $VERSION | cut -d. -f1)
@@ -202,17 +213,14 @@ EOF
         PATCH=$(echo $VERSION | cut -d. -f3)
         NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
         
-        # Update version in package.json
         sed -i "s/\"version\": \"$VERSION\"/\"version\": \"$NEW_VERSION\"/" package.json
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
         
         git add package.json
         git commit -m "Bump version to $NEW_VERSION [skip ci]"
         git push
-        
-        echo "Updated version to $NEW_VERSION"
 
     - name: Create Release
-      id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
