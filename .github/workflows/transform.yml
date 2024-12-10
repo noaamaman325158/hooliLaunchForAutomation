@@ -45,41 +45,44 @@ jobs:
     - name: Create fix-paths script
       working-directory: ./ClientSide/client
       run: |
-        echo 'const fs = require("fs");
+        echo '
+        const fs = require("fs");
         const path = require("path");
         const buildDir = path.join("build");
         const indexPath = path.join(buildDir, "index.html");
         let originalHtml = fs.readFileSync(indexPath, "utf8");
         const cssHash = originalHtml.match(/main\.(.*?)\.css/)[1];
         const jsHash = originalHtml.match(/main\.(.*?)\.js/)[1];
-        const newHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="./favicon.ico" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Modern React application" />
-    <link rel="apple-touch-icon" href="./logo152.png" />
-    <link rel="manifest" href="./manifest.json" />
-    <link href="./static/css/main.${cssHash}.css" rel="stylesheet" type="text/css" />
-    <title>Your App Name</title>
-    <script defer="defer" src="./static/js/main.${jsHash}.js" type="text/javascript"></script>
-    <script>
-      if (typeof process === "object") {
-        window.__dirname = process.cwd();
-        window.ipcRenderer = require("electron").ipcRenderer;
-      }
-    </script>
-</head>
-<body>
-    <noscript>You need to enable JavaScript to run this application. Please enable it to continue.</noscript>
-    <div id="root"></div>
-</body>
-</html>`;
+        const newHtml = String.raw`
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="utf-8" />
+            <link rel="icon" href="./favicon.ico" />
+            <meta name="viewport" content="width=device-width,initial-scale=1" />
+            <meta name="theme-color" content="#000000" />
+            <meta name="description" content="Modern React application" />
+            <link rel="apple-touch-icon" href="./logo152.png" />
+            <link rel="manifest" href="./manifest.json" />
+            <link href="./static/css/main.${cssHash}.css" rel="stylesheet" type="text/css" />
+            <title>Your App Name</title>
+            <script defer="defer" src="./static/js/main.${jsHash}.js" type="text/javascript"></script>
+            <script>
+              if (typeof process === "object") {
+                window.__dirname = process.cwd();
+                window.ipcRenderer = require("electron").ipcRenderer;
+              }
+            </script>
+          </head>
+          <body>
+            <noscript>You need to enable JavaScript to run this application. Please enable it to continue.</noscript>
+            <div id="root"></div>
+          </body>
+        </html>
+        `;
         fs.writeFileSync(indexPath, newHtml);
-        console.log("Updated index.html with correct paths and MIME types");' > fix-paths.js
-
+        console.log("Updated index.html with correct paths and MIME types");
+        ' > fix-paths.js
     - name: Run fix-paths script
       working-directory: ./ClientSide/client
       run: node fix-paths.js
