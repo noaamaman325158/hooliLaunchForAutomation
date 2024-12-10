@@ -46,7 +46,7 @@ jobs:
       working-directory: ./ClientSide/client
       shell: bash
       run: |
-        cat << 'EOL' > fix-paths.js
+        cat > fix-paths.js << 'EOF'
         const fs = require("fs");
         const path = require("path");
         const buildDir = path.join("build");
