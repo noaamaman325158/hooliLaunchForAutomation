@@ -155,26 +155,34 @@ jobs:
 
         def get_latest_version(service, folder_id):
             try:
-                # Search for folders that match the pattern 'v\d+'
+                # List all folders in the parent directory
                 results = service.files().list(
-                    q=f"'{folder_id}' in parents and mimeType='application/vnd.google-apps.folder' and name matches '^v\\d+$'",
-                    fields="files(name)",
-                    orderBy="name desc"
+                    q=f"'{folder_id}' in parents and mimeType='application/vnd.google-apps.folder' and name starts with 'v'",
+                    fields="nextPageToken, files(name)",
+                    orderBy="name desc",
+                    pageSize=1000
                 ).execute()
                 
                 folders = results.get('files', [])
+                print(f"Found folders: {[f['name'] for f in folders]}")  # Debug print
                 
                 if not folders:
-                    return 0  # No existing version folders
+                    return 0
                 
-                # Extract version numbers and find the highest
-                latest_version = max(
-                    [int(re.match(r'v(\d+)', folder['name']).group(1)) 
-                     for folder in folders if re.match(r'v(\d+)', folder['name'])]
-                    or [0]
-                )
+                # Extract numbers from folder names and find the highest
+                version_numbers = []
+                for folder in folders:
+                    match = re.search(r'v(\d+)', folder['name'])
+                    if match:
+                        version_numbers.append(int(match.group(1)))
                 
+                if not version_numbers:
+                    return 0
+                    
+                latest_version = max(version_numbers)
+                print(f"Latest version found: v{latest_version}")  # Debug print
                 return latest_version
+                
             except Exception as e:
                 print(f"Error getting latest version: {str(e)}")
                 return 0
@@ -199,6 +207,8 @@ jobs:
             latest_version = get_latest_version(service, base_folder_id)
             new_version = latest_version + 1
             version_folder_name = f"v{new_version}"
+            
+            print(f"Creating new version folder: {version_folder_name}")  # Debug print
 
             # Create new version folder
             version_folder_metadata = {
