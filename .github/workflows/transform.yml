@@ -22,6 +22,8 @@ jobs:
     steps:
     - name: Checkout source project
       uses: actions/checkout@v4
+
+    
       
     - name: Checkout electron packaging project
       uses: actions/checkout@v4
@@ -29,6 +31,7 @@ jobs:
         repository: noaamaman325158/hooliLaunchPackage  
         token: ${{ secrets.PAT_TOKEN }}
         path: electron-project
+        ref: three_others_version
         lfs: false
 
     - name: Setup Node.js
