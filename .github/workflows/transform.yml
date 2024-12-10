@@ -113,6 +113,13 @@ jobs:
         EOL
         node update-package.js
 
+    - name: Setup Electron Builder
+      working-directory: ./electron-project
+      run: |
+        npm install --save-dev electron@28.3.3 electron-builder@latest
+        npm install --save-dev @electron/remote@latest
+        npm install --save-dev @electron/rebuild@latest
+  
     - name: Run electron-builder
       working-directory: ./electron-project
       run: |
