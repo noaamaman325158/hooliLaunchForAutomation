@@ -1,9 +1,16 @@
 name: Build and Package React App
 on:
   push:
-    branches: [ main ]
+    branches:
+      - '*'           
+      - '**'          
+    paths-ignore:
+      - '**.md'       
+      - 'docs/**'     
   pull_request:
-    branches: [ main ]
+    branches: 
+      - '*'          
+      - '**'  
 
 jobs:
   build:
