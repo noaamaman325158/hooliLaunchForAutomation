@@ -151,8 +151,13 @@ jobs:
         from googleapiclient.errors import HttpError
         import os
         import json
+        from datetime import datetime
 
         try:
+            # Generate timestamp in the required format
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            new_file_name = f"HooliLaunch_v{timestamp}.exe"
+
             credentials = service_account.Credentials.from_service_account_file(
                 'service-account.json',
                 scopes=[
@@ -173,7 +178,7 @@ jobs:
             if os.path.exists(file_path):
                 print(f"Found file to upload: {file_path}")
                 file_metadata = {
-                    'name': 'Hooli Launch Setup 1.0.0.exe',
+                    'name': new_file_name,  # Using the timestamped filename
                     'parents': [folder_id]
                 }
                 
@@ -183,7 +188,7 @@ jobs:
                     resumable=True
                 )
                 
-                print("Starting file upload...")
+                print(f"Starting file upload as: {new_file_name}")
                 file = service.files().create(
                     body=file_metadata,
                     media_body=media,
