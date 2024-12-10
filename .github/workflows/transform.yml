@@ -1,0 +1,241 @@
+name: Build and Package React App
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+    - name: Checkout source project
+      uses: actions/checkout@v4
+      
+    - name: Checkout electron packaging project
+      uses: actions/checkout@v4
+      with:
+        repository: noaamaman325158/hooliLaunchPackage  
+        token: ${{ secrets.PAT_TOKEN }}
+        path: electron-project
+        lfs: true
+
+    - name: Setup Git LFS
+      working-directory: ./electron-project
+      run: |
+        git lfs install
+        echo "*.exe filter=lfs diff=lfs merge=lfs -text" > .gitattributes
+        echo "*.dll filter=lfs diff=lfs merge=lfs -text" >> .gitattributes
+        git add .gitattributes
+        git commit -m "Add Git LFS configuration" || echo "No changes to commit"
+        git push || echo "No changes to push"
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Install Wine
+      run: |
+        sudo dpkg --add-architecture i386
+        sudo apt-get update
+        sudo apt-get install -y wine64 wine32
+
+    - name: Build React App
+      working-directory: ./ClientSide/client
+      run: |
+        npm ci
+        CI=false npm run build
+
+    - name: Fix paths in index.html
+      working-directory: ./ClientSide/client
+      run: |
+        node -e '
+          const fs = require("fs");
+          const path = require("path");
+          
+          // Read build directory contents
+          const buildDir = path.join("build");
+          const indexPath = path.join(buildDir, "index.html");
+          let originalHtml = fs.readFileSync(indexPath, "utf8");
+          
+          // Extract hash values from original HTML
+          const cssHash = originalHtml.match(/main\.(.*?)\.css/)[1];
+          const jsHash = originalHtml.match(/main\.(.*?)\.js/)[1];
+          
+          // Create new HTML structure with proper paths and MIME types
+          const newHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="./favicon.ico" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Modern React application" />
+    <link rel="apple-touch-icon" href="./logo152.png" />
+    <link rel="manifest" href="./manifest.json" />
+    
+    <!-- CSS with correct path and MIME type -->
+    <link href="./static/css/main.${cssHash}.css" rel="stylesheet" type="text/css" />
+    
+    <title>Your App Name</title>
+    
+    <!-- JS with correct path and MIME type -->
+    <script defer="defer" src="./static/js/main.${jsHash}.js" type="text/javascript"></script>
+
+    <!-- Electron-specific scripts -->
+    <script>
+      if (typeof process === "object") {
+        window.__dirname = process.cwd();
+        window.ipcRenderer = require("electron").ipcRenderer;
+      }
+    </script>
+</head>
+<body>
+    <noscript>You need to enable JavaScript to run this application. Please enable it to continue.</noscript>
+    <div id="root"></div>
+</body>
+</html>`;
+
+          // Save the new HTML
+          fs.writeFileSync(indexPath, newHtml);
+          console.log("Updated index.html with correct paths and MIME types");
+          console.log("\nUpdated index.html content:");
+          console.log(newHtml);
+        '
+        
+    - name: Clear and Create electron build directory
+      run: |
+        rm -rf electron-project/build
+        mkdir -p electron-project/build
+      
+    - name: Copy build files to electron project
+      run: |
+        cp -r ClientSide/client/build/* electron-project/build/
+
+    - name: Update package.json for electron-builder
+      working-directory: ./electron-project
+      run: |
+        node -e '
+          const fs = require("fs");
+          const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+          pkg.description = pkg.description || "Hooli Launch Application";
+          pkg.author = pkg.author || {
+            "name": "Hooli Launch Team",
+            "email": "your-email@example.com"
+          };
+          fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
+        '
+
+    - name: Run electron-builder
+      working-directory: ./electron-project
+      run: |
+        npx electron-builder --win --x64 --publish never
+
+    - name: Install Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+        export_default_credentials: true
+
+    - name: Authenticate to Google Cloud
+      run: |
+        echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}' > service-account.json
+        gcloud auth activate-service-account --key-file=service-account.json
+
+    - name: Install Google Drive CLI tool
+      run: |
+        pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
+
+    - name: Upload to Google Drive
+      run: |
+        python - <<EOF
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+        from googleapiclient.http import MediaFileUpload
+        from googleapiclient.errors import HttpError
+        import os
+        import json
+
+        try:
+            credentials = service_account.Credentials.from_service_account_file(
+                'service-account.json',
+                scopes=[
+                    'https://www.googleapis.com/auth/drive',
+                    'https://www.googleapis.com/auth/drive.file',
+                    'https://www.googleapis.com/auth/drive.metadata'
+                ]
+            )
+
+            service_account_info = json.load(open('service-account.json'))
+            print(f"Using service account: {service_account_info['client_email']}")
+
+            service = build('drive', 'v3', credentials=credentials)
+
+            file_path = 'electron-project/dist/Hooli Launch Setup 1.0.0.exe'
+            folder_id = '${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}'
+
+            print(f"Checking folder permissions for folder ID: {folder_id}")
+            try:
+                folder = service.files().get(
+                    fileId=folder_id,
+                    fields='capabilities'
+                ).execute()
+                print(f"Folder permissions: {folder}")
+            except HttpError as e:
+                print(f"Error checking folder permissions: {str(e)}")
+
+            if os.path.exists(file_path):
+                print(f"Found file to upload: {file_path}")
+                file_metadata = {
+                    'name': 'Hooli Launch Setup 1.0.0.exe',
+                    'parents': [folder_id]
+                }
+                
+                media = MediaFileUpload(
+                    file_path,
+                    mimetype='application/octet-stream',
+                    resumable=True
+                )
+                
+                print("Starting file upload...")
+                file = service.files().create(
+                    body=file_metadata,
+                    media_body=media,
+                    fields='id,name',
+                    supportsAllDrives=True
+                ).execute()
+                
+                print(f'File uploaded successfully. File ID: {file.get("id")}, Name: {file.get("name")}')
+            else:
+                print(f'Error: File not found at {file_path}')
+                exit(1)
+
+        except Exception as e:
+            print(f"Error during upload process: {str(e)}")
+            raise e
+        EOF
+
+    - name: Track large files with Git LFS
+      working-directory: ./electron-project
+      run: |
+        git lfs track "dist/**/*.exe"
+        git lfs track "dist/**/*.dll"
+        git add .gitattributes dist/
+        git add build
+        git status
+        
+    - name: Commit and push to electron project
+      working-directory: ./electron-project
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add -A
+        git commit -m "Update build files and electron package" || echo "No changes to commit"
+        git push
