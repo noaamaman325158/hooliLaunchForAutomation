@@ -40,17 +40,6 @@ jobs:
         node-version: '20.x'
         registry-url: 'https://registry.npmjs.org'
 
-    # - name: Install Dependencies for electron project
-    #   working-directory: ./electron-project
-    #   run: |
-    #     echo "Installing electron and electron-builder explicitly..."
-    #     npm install electron@latest electron-builder@latest --save-dev
-    #     echo "Installing remaining dependencies..."
-    #     npm install --legacy-peer-deps
-    #   env:
-    #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-    #     NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
-
     - name: Install Wine
       run: |
         sudo dpkg --add-architecture i386
@@ -72,59 +61,52 @@ jobs:
           
           // Read build directory contents
           const buildDir = path.join("build");
-          const staticDir = path.join(buildDir, "static");
-          
-          // Find CSS and JS files
-          const cssFiles = fs.readdirSync(path.join(staticDir, "css"))
-            .filter(file => file.endsWith(".css"))
-            .map(file => `/static/css/${file}`);
-            
-          const jsFiles = fs.readdirSync(path.join(staticDir, "js"))
-            .filter(file => file.endsWith(".js"))
-            .map(file => `/static/js/${file}`);
-            
-          console.log("Found CSS files:", cssFiles);
-          console.log("Found JS files:", jsFiles);
-          
-          // Read index.html
           const indexPath = path.join(buildDir, "index.html");
-          let html = fs.readFileSync(indexPath, "utf8");
+          let originalHtml = fs.readFileSync(indexPath, "utf8");
           
-          // Fix base paths
-          html = html.replace(/href="\//g, "href=\"./");
-          html = html.replace(/src="\//g, "src=\"./");
+          // Extract hash values from original HTML
+          const cssHash = originalHtml.match(/main\.(.*?)\.css/)[1];
+          const jsHash = originalHtml.match(/main\.(.*?)\.js/)[1];
           
-          // Fix paths for static files
-          cssFiles.forEach(cssFile => {
-            const oldPath = `href="${cssFile}"`;
-            const newPath = `href=".${cssFile}"`;
-            html = html.replace(oldPath, newPath);
-          });
-          
-          jsFiles.forEach(jsFile => {
-            const oldPath = `src="${jsFile}"`;
-            const newPath = `src=".${jsFile}"`;
-            html = html.replace(oldPath, newPath);
-          });
-          
-          // Add electron-specific scripts
-          const electronScript = `
-            <script>
-              if (typeof process === "object") {
-                window.__dirname = process.cwd();
-                window.ipcRenderer = require("electron").ipcRenderer;
-              }
-            </script>
-          `;
-          html = html.replace("</head>", `${electronScript}</head>`);
-          
-          // Save updated file
-          fs.writeFileSync(indexPath, html);
-          console.log("Updated index.html with correct static asset paths");
-          
-          // Log final content for verification
+          // Create new HTML structure with proper paths and MIME types
+          const newHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="./favicon.ico" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Modern React application" />
+    <link rel="apple-touch-icon" href="./logo152.png" />
+    <link rel="manifest" href="./manifest.json" />
+    
+    <!-- CSS with correct path and MIME type -->
+    <link href="./static/css/main.${cssHash}.css" rel="stylesheet" type="text/css" />
+    
+    <title>Your App Name</title>
+    
+    <!-- JS with correct path and MIME type -->
+    <script defer="defer" src="./static/js/main.${jsHash}.js" type="text/javascript"></script>
+
+    <!-- Electron-specific scripts -->
+    <script>
+      if (typeof process === "object") {
+        window.__dirname = process.cwd();
+        window.ipcRenderer = require("electron").ipcRenderer;
+      }
+    </script>
+</head>
+<body>
+    <noscript>You need to enable JavaScript to run this application. Please enable it to continue.</noscript>
+    <div id="root"></div>
+</body>
+</html>`;
+
+          // Save the new HTML
+          fs.writeFileSync(indexPath, newHtml);
+          console.log("Updated index.html with correct paths and MIME types");
           console.log("\nUpdated index.html content:");
-          console.log(html);
+          console.log(newHtml);
         '
         
     - name: Clear and Create electron build directory
@@ -182,7 +164,6 @@ jobs:
         import json
 
         try:
-            # Setup credentials with broader scope
             credentials = service_account.Credentials.from_service_account_file(
                 'service-account.json',
                 scopes=[
@@ -192,20 +173,16 @@ jobs:
                 ]
             )
 
-            # Print service account email for verification
             service_account_info = json.load(open('service-account.json'))
             print(f"Using service account: {service_account_info['client_email']}")
 
-            # Create Drive API service
             service = build('drive', 'v3', credentials=credentials)
 
-            # File to upload
             file_path = 'electron-project/dist/Hooli Launch Setup 1.0.0.exe'
             folder_id = '${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}'
 
             print(f"Checking folder permissions for folder ID: {folder_id}")
             try:
-                # Check folder permissions
                 folder = service.files().get(
                     fileId=folder_id,
                     fields='capabilities'
